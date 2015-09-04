@@ -7,8 +7,8 @@
 
 ### API Usage
 #### Create your own type converter
-* If you want to implement a type converter, you simple implement the IConverter<TFrom, TTo> interface where TFrom is the generic type from which you want to convert and TTo is the type to which you want to convert to.
-* Following sample code illustrates a converter which converts between string and System.Uri.
+If you want to implement a type converter, you simple implement the IConverter<TFrom, TTo> interface where TFrom is the generic type from which you want to convert and TTo is the type to which you want to convert to.
+Following sample code illustrates a converter which converts between string and System.Uri.
 ```
 public class StringToUriConverter : IConverter<string, Uri>, IConverter<Uri, string>
 {
@@ -25,15 +25,21 @@ public class StringToUriConverter : IConverter<string, Uri>, IConverter<Uri, str
 ```
 
 #### Register a converter
-* To be documented
-```
-IConverterRegistry.RegisterConverter
-```
-
-#### Convert between types
-* Create (or retrieve via dependency injection) an instance of ConverterRegistry and register those converters you like to use later on. Beware that you will have to register a converter for each direction you want to convert (if you support two-way conversion). Following example shows how to register the StringToUriConverter to convert between string and Uri and vice versa.
+Create (or retrieve via dependency injection) an instance of ConverterRegistry and register those converters you like to use later on. Beware that you will have to register a converter for each direction you want to convert (if you support two-way conversion). Following example shows how to register the StringToUriConverter to convert between string and Uri and vice versa.
 ```
 IConverterRegistry converterRegistry = new ConverterRegistry();
 converterRegistry.RegisterConverter<string, Uri>(() => new StringToUriConverter());
 converterRegistry.RegisterConverter<Uri, string>(() => new StringToUriConverter());
+```
+
+#### Convert between types
+Now, after having set-up a basic converter, we can use IConverterRegistry to convert between object of different types.
+
+Convert from string to System.Uri
+```
+var url = converterRegistry.Convert<string, Uri>("http://github.com/");
+```
+Convert from System.Uri to string
+```
+var urlAsString = converterRegistry.Convert<Uri, string>(url);
 ```
