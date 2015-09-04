@@ -7,9 +7,21 @@
 
 ### API Usage
 #### Create your own type converter
-* To be documented
+* If you want to implement a type converter, you simple implement the IConverter<TFrom, TTo> interface where TFrom is the generic type from which you want to convert and TTo is the type to which you want to convert to.
+* Following sample code illustrates a converter which converts between string and System.Uri.
 ```
-IConverter
+    public class StringToUriConverter : IConverter<string, Uri>, IConverter<Uri, string>
+    {
+        public Uri Convert(string value)
+        {
+            return new Uri(value);
+        }
+
+        public string Convert(Uri value)
+        {
+            return value.AbsoluteUri;
+        }
+    }
 ```
 
 #### Register a converter
