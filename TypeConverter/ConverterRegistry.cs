@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using TypeConverter.Converters;
 using TypeConverter.Exceptions;
 
 namespace TypeConverter
@@ -55,6 +54,21 @@ namespace TypeConverter
                 ////LogLog.Error(DeclaringType, "Cannot CreateConverterInstance of type [" + converterType.FullName + "], type does not implement ITypeConverter or IConvertTo");
             }
             return null;
+        }
+
+        public object Convert<TTarget>(object value)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+
+            return this.Convert(value.GetType(), typeof(TTarget), value);
+        }
+
+        public object Convert<TSource>(Type targetType, TSource value)
+        {
+            return this.Convert(typeof(TSource), targetType, value);
         }
 
         public object Convert(Type sourceType, Type targetType, object value)

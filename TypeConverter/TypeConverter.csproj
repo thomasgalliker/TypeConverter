@@ -34,17 +34,25 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\TypeConverter.xml</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>StrongNameKey.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="ConverterRegistry.cs" />
-    <Compile Include="Converters\BooleanTypeConverter.cs" />
-    <Compile Include="Converters\DoubleTypeConverter.cs" />
+    <Compile Include="Converters\StringToBoolConverter.cs" />
+    <Compile Include="Converters\StringToDoubleConverter.cs" />
+    <Compile Include="Converters\StringToUriConverter.cs" />
     <Compile Include="IConverter.cs" />
-    <Compile Include="Converters\IntegerTypeConverter.cs" />
-    <Compile Include="Converters\StringTypeConverter.cs" />
-    <Compile Include="Converters\UriTypeConverter.cs" />
+    <Compile Include="Converters\StringToIntegerConverter.cs" />
     <Compile Include="Exceptions\ConversionNotSupportedException.cs" />
     <Compile Include="IConverterRegistry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="StrongNameKey.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

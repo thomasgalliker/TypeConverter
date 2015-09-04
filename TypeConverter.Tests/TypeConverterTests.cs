@@ -104,6 +104,52 @@ namespace TypeConverter.Tests
         }
 
         [TestMethod]
+        public void ShouldConvertUsingGenericSourceTypeAndNongenericTargetType()
+        {
+            // Arrange
+            const string InputString = "http://www.google.com/";
+            Type converterType = typeof(StringToUriConverter);
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+            converterRegistry.RegisterConverter<string, Uri>(converterType);
+            converterRegistry.RegisterConverter<Uri, string>(converterType);
+
+            // Act
+            var convertedObject = (Uri)converterRegistry.Convert(typeof(Uri), InputString);
+            var outputString = converterRegistry.Convert(typeof(string), convertedObject);
+
+            // Assert
+            convertedObject.Should().NotBeNull();
+            convertedObject.Should().BeOfType<Uri>();
+            convertedObject.As<Uri>().AbsoluteUri.Should().Be(InputString);
+
+            outputString.Should().NotBeNull();
+            outputString.Should().Be(InputString);
+        }
+
+        [TestMethod]
+        public void ShouldConvertUsingGenericTargetTypeAndObjectSourceType()
+        {
+            // Arrange
+            const string InputString = "http://www.google.com/";
+            Type converterType = typeof(StringToUriConverter);
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+            converterRegistry.RegisterConverter<string, Uri>(converterType);
+            converterRegistry.RegisterConverter<Uri, string>(converterType);
+
+            // Act
+            var convertedObject = (Uri)converterRegistry.Convert<Uri>(InputString);
+            var outputString = converterRegistry.Convert<string>(convertedObject);
+
+            // Assert
+            convertedObject.Should().NotBeNull();
+            convertedObject.Should().BeOfType<Uri>();
+            convertedObject.As<Uri>().AbsoluteUri.Should().Be(InputString);
+
+            outputString.Should().NotBeNull();
+            outputString.Should().Be(InputString);
+        }
+
+        [TestMethod]
         public void ShouldResetRegistrations()
         {
             // Arrange

@@ -1,6 +1,5 @@
 ﻿using System;
 
-using TypeConverter.Converters;
 
 namespace TypeConverter
 {
@@ -11,6 +10,10 @@ namespace TypeConverter
         void RegisterConverter<TSource, TTarget>(Type converterType);
 
         IConverter<TSource, TTarget> GetConverterForType<TSource, TTarget>();
+
+        object Convert<TTarget>(object value);
+
+        object Convert<TSource>(Type targetType, TSource value);
 
         object Convert(Type sourceType, Type targetType, object value);
 
