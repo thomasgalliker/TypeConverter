@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>TypeConverter</id>
+    <version>1.0.1</version>
+    <title>TypeConverter</title>
+    <authors>Thomas Galliker</authors>
+    <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
+    <projectUrl>https://nuget.org/packages/TypeConverter</projectUrl>
+    <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <summary>
+      TypeConverter is a lightweight, portable class library which allows to convert between objects of different types.
+    </summary>
+    <description>
+      TypeConverter is a lightweight, portable class library which allows to convert between objects of different types.
+      This library is shipped with some basic sample converters, however, you are free to write your own type converters
+      and register them in the IConverterRegistry.
+    </description>
+	<tags>
+    TypeConverter convert conversion type mapping mapper
+    windows phone winphone wp8 windowsphone android xamarin.ios ios monoandroid monodroid monotouch
+  </tags>
+    <releaseNotes />
+    <copyright>Copyright 2015</copyright>
+    <language>en-US</language>
+    <dependencies>
+      <!--No dependencies-->
+    </dependencies>
+  </metadata>
+  <files>
+    <!--PCL-->
+    <file src="..\TypeConverter\bin\Release\TypeConverter.dll" target="lib\portable-net45+wp8+wpa81+netcore45+monoandroid1+xamarin.ios10\TypeConverter.dll" />
+
+    <!--Xamarin.Android-->
+    <file src="..\TypeConverter\bin\Release\TypeConverter.dll" target="lib\MonoAndroid10\TypeConverter.dll" />
+
+    <!--Xamarin.iOS Classic API-->
+    <file src="..\TypeConverter\bin\Release\TypeConverter.dll" target="lib\MonoTouch10\TypeConverter.dll" />
+
+    <!--Xamarin.iOS Unified API-->
+    <file src="..\TypeConverter\bin\Release\TypeConverter.dll" target="lib\xamarin.ios10\TypeConverter.dll" />
+
+    <!--Windows Phone 8-->
+    <file src="..\TypeConverter\bin\Release\TypeConverter.dll" target="lib\wp8\TypeConverter.dll" />
+
+    <!--Windows Store-->
+    <file src="..\TypeConverter\bin\Release\TypeConverter.dll" target="lib\win81\TypeConverter.dll" />
+
+    <file src="tools\init.ps1" target="tools\init.ps1" />
+    <file src="tools\install.ps1" target="tools\install.ps1" />
+    <file src="tools\uninstall.ps1" target="tools\uninstall.ps1" />
+  </files>
+</package>
