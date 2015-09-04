@@ -37,9 +37,9 @@ Now, after having set-up a basic converter, we can use IConverterRegistry to con
 
 Convert from string to System.Uri
 ```
-var url = converterRegistry.Convert<string, Uri>("http://github.com/");
+var uri = converterRegistry.Convert<string, Uri>("http://github.com/");
 ```
 Convert from System.Uri to string
 ```
-var urlAsString = converterRegistry.Convert<Uri, string>(url);
+var uriAsString = converterRegistry.Convert<Uri, string>(uri);
 ```
