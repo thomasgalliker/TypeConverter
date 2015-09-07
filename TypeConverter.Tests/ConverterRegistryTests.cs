@@ -1,20 +1,17 @@
-﻿
-using System;
+﻿using System;
 
 using FluentAssertions;
-
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using TypeConverter.Exceptions;
 using TypeConverter.Tests.Testdata;
 
+using Xunit;
+
 namespace TypeConverter.Tests
 {
-    [TestClass]
-    public class TypeConverterTests
+    public class ConverterRegistryTests
     {
-        [TestMethod]
-        [ExpectedException(typeof(ConversionNotSupportedException))]
+        [Fact]
         public void ShouldThrowConversionNotSupportedExceptionWhenTryingToConvertWithoutValidRegistration()
         {
             // Arrange
@@ -22,31 +19,14 @@ namespace TypeConverter.Tests
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             // Act
-            object convertedObject = converterRegistry.Convert(typeof(string), typeof(Uri), InputString);
+            Action action = () => converterRegistry.Convert(typeof(string), typeof(Uri), InputString);
 
             // Assert
+            Assert.Throws<ConversionNotSupportedException>(action);
         }
 
-        [TestMethod]
-        public void ShouldConvertOneWay()
-        {
-            // Arrange
-            const string InputString = "http://www.google.com/";
-            IConverterRegistry converterRegistry = new ConverterRegistry();
-            converterRegistry.RegisterConverter<string, Uri>(() => new StringToUriConverter());
-
-            // Act
-            object convertedObject = converterRegistry.Convert(typeof(string), typeof(Uri), InputString);
-
-            // Assert
-            convertedObject.Should().NotBeNull();
-            convertedObject.Should().BeOfType<Uri>();
-            convertedObject.As<Uri>().AbsoluteUri.Should().Be(InputString);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(ConversionNotSupportedException))]
-        public void ShouldNotConvertIfRegistrationIsMissingEvenIfConverterIsImplementingBothWayConversion()
+        [Fact]
+        public void ShouldThrowConversionNotSupportedExceptionWhenTryingToConvertGenericWithoutValidRegistration()
         {
             // Arrange
             const string InputString = "http://www.google.com/";
@@ -54,34 +34,29 @@ namespace TypeConverter.Tests
             converterRegistry.RegisterConverter<Uri, string>(() => new StringToUriConverter());
 
             // Act
-            object convertedObject = converterRegistry.Convert(typeof(string), typeof(Uri), InputString);
+            Action action = () => converterRegistry.Convert<string, string>(InputString);
+
+            // Assert
+            Assert.Throws<ConversionNotSupportedException>(action);
         }
 
-        [TestMethod]
-        public void ShouldConvertBothWays()
+        [Fact]
+        public void ShouldThrowConversionNotSupportedExceptionWhenWrongConversionWayIsConfigured()
         {
             // Arrange
             const string InputString = "http://www.google.com/";
             IConverterRegistry converterRegistry = new ConverterRegistry();
-            converterRegistry.RegisterConverter<string, Uri>(() => new StringToUriConverter());
             converterRegistry.RegisterConverter<Uri, string>(() => new StringToUriConverter());
 
             // Act
-            var convertedObject = converterRegistry.Convert<string, Uri>(InputString);
-            var outputString = converterRegistry.Convert<Uri, string>(convertedObject);
+            Action action = () => converterRegistry.Convert(typeof(string), typeof(Uri), InputString);
 
             // Assert
-            convertedObject.Should().NotBeNull();
-            convertedObject.Should().BeOfType<Uri>();
-            convertedObject.As<Uri>().AbsoluteUri.Should().Be(InputString);
-
-            outputString.Should().NotBeNullOrEmpty();
-            outputString.Should().Be(InputString);
+            Assert.Throws<ConversionNotSupportedException>(action);
         }
 
-
-        [TestMethod]
-        public void ShouldConvertBothWaysUsingConverterType()
+        [Fact]
+        public void ShouldConvertUsingConverterType()
         {
             // Arrange
             const string InputString = "http://www.google.com/";
@@ -103,7 +78,7 @@ namespace TypeConverter.Tests
             outputString.Should().Be(InputString);
         }
 
-        [TestMethod]
+        [Fact]
         public void ShouldConvertUsingGenericSourceTypeAndNongenericTargetType()
         {
             // Arrange
@@ -126,7 +101,7 @@ namespace TypeConverter.Tests
             outputString.Should().Be(InputString);
         }
 
-        [TestMethod]
+        [Fact]
         public void ShouldConvertUsingGenericTargetTypeAndObjectSourceType()
         {
             // Arrange
@@ -149,7 +124,7 @@ namespace TypeConverter.Tests
             outputString.Should().Be(InputString);
         }
 
-        [TestMethod]
+        [Fact]
         public void ShouldResetRegistrations()
         {
             // Arrange

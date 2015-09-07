@@ -18,6 +18,11 @@ namespace TypeConverter
 
         public void RegisterConverter<TSource, TTarget>(Func<IConverter<TSource, TTarget>> converterFactory)
         {
+            if (converterFactory == null)
+            {
+                throw new ArgumentNullException("converterFactory");
+            }
+
             lock (this.converters)
             {
                 this.converters.Add(new Tuple<Type, Type>(typeof(TSource), typeof(TTarget)), converterFactory);
@@ -33,7 +38,7 @@ namespace TypeConverter
         {
             if (converterType == null)
             {
-                throw new ArgumentNullException("converterType", "CreateConverterInstance cannot create instance, converterType is null");
+                throw new ArgumentNullException("converterType");
             }
 
             // Check type is a converter
@@ -58,11 +63,6 @@ namespace TypeConverter
 
         public object Convert<TTarget>(object value)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
-            }
-
             return this.Convert(value.GetType(), typeof(TTarget), value);
         }
 
@@ -73,6 +73,21 @@ namespace TypeConverter
 
         public object Convert(Type sourceType, Type targetType, object value)
         {
+            if (sourceType == null)
+            {
+                throw new ArgumentNullException("sourceType");
+            }
+
+            if (targetType == null)
+            {
+                throw new ArgumentNullException("targetType");
+            }
+
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+
             var convertedValue = this.TryConvertGenerically(sourceType, targetType, value);
             if (convertedValue != null)
             {
@@ -104,38 +119,40 @@ namespace TypeConverter
 
         public TTarget Convert<TSource, TTarget>(TSource value)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+
             var converter = this.GetConverterForType<TSource, TTarget>();
-            return converter.Convert(value);
+            if (converter != null)
+            {
+                return converter.Convert(value);
+            }
+
+            throw ConversionNotSupportedException.Create(typeof(TSource), typeof(TTarget), value);
         }
 
         private object TryConvertGenerically(Type sourceType, Type targetType, object value)
         {
             // Call generic method GetConverterForType to retrieve generic IConverter<TSource, TTarget>
-            MethodInfo getConverterForTypeMethod = this.GetType().GetTypeInfo().GetDeclaredMethod("GetConverterForType");
-            MethodInfo genericGetConverterForTypeMethod = getConverterForTypeMethod.MakeGenericMethod(sourceType, targetType);
+            var getConverterForTypeMethod = this.GetType().GetTypeInfo().GetDeclaredMethod("GetConverterForType");
+            var genericGetConverterForTypeMethod = getConverterForTypeMethod.MakeGenericMethod(sourceType, targetType);
 
-            object genericConverters = genericGetConverterForTypeMethod.Invoke(this, null);
-            if (genericConverters == null)
+            var genericConverter = genericGetConverterForTypeMethod.Invoke(this, null);
+            if (genericConverter == null)
             {
-                throw new ConversionNotSupportedException(
-                    string.Format("Could not find IConverter<{0}, {1}>. Use RegisterConverter method to register a converter which converts between type {0} and type {1}.",
-                        sourceType,
-                        targetType));
+                throw ConversionNotSupportedException.Create(sourceType, targetType, value);
             }
 
-            var matchingConverterInterface = genericConverters.GetType().GetTypeInfo().ImplementedInterfaces.SingleOrDefault(i =>
+            var matchingConverterInterface = genericConverter.GetType().GetTypeInfo().ImplementedInterfaces.SingleOrDefault(i =>
                 i.GenericTypeArguments.Count() == 2 && 
                 i.GenericTypeArguments[0] == sourceType && 
                 i.GenericTypeArguments[1] == targetType);
 
-            if (matchingConverterInterface == null)
-            {
-                throw new Exception();
-            }
-
             // Call Convert method on the particular interface
             var convertMethodGeneric = matchingConverterInterface.GetTypeInfo().GetDeclaredMethod("Convert");
-            var convertedValue = convertMethodGeneric.Invoke(genericConverters, new[] { value });
+            var convertedValue = convertMethodGeneric.Invoke(genericConverter, new[] { value });
             return convertedValue;
         }
 
@@ -153,32 +170,6 @@ namespace TypeConverter
                 return null;
             }
         }
-
-        ////public ITypeConverter GetConverterForType(Type targetType)
-        ////{
-        ////    lock (this.converters)
-        ////    {
-        ////        // Lookup in the registry
-        ////        if (this.converters.ContainsKey(targetType))
-        ////        {
-        ////            var converter = this.typeConverters[targetType]() as ITypeConverter;
-        ////            if (converter == null)
-        ////            {
-        ////                // Lookup using attributes
-        ////                converter = this.CreateConverterInstance(targetType) as ITypeConverter;
-        ////                if (converter != null)
-        ////                {
-        ////                    // Store in registry
-        ////                    this.typeConverters[targetType] = () => converter;
-        ////                }
-        ////            }
-
-        ////            return converter;
-        ////        }
-
-        ////        return null;
-        ////    }
-        ////}
 
         public void Reset()
         {
