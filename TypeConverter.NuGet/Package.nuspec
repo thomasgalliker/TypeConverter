@@ -2,11 +2,11 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>TypeConverter</id>
-    <version>1.0.5</version>
+    <version>1.0.7</version>
     <title>TypeConverter</title>
     <authors>Thomas Galliker</authors>
     <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
-    <projectUrl>https://nuget.org/packages/TypeConverter</projectUrl>
+    <projectUrl>https://github.com/thomasgalliker/TypeConverter/</projectUrl>
     <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <summary>

@@ -88,33 +88,32 @@ namespace TypeConverter
                 throw new ArgumentNullException("value");
             }
 
+            // Attempt 1: Try to convert using registered converter
             var convertedValue = this.TryConvertGenerically(sourceType, targetType, value);
             if (convertedValue != null)
             {
                 return convertedValue;
             }
-            else
+
+            // Attempt 2: Try to convert generic enum
+            var convertedEnum = this.TryConvertEnumGenerically(sourceType, targetType, value);
+            if (convertedEnum != null)
             {
-                if (targetType.GetTypeInfo().IsEnum)
-                {
-                    return Enum.Parse(targetType, value.ToString(), true);
-                }
-                else
-                {
-                    // We essentially make a guess that to convert from a string
-                    // to an arbitrary type T there will be a static method defined on type T called Parse
-                    // that will take an argument of type string. i.e. T.Parse(string)->T we call this
-                    // method to convert the string to the type required by the property.
-                    MethodInfo parseMethod = targetType.GetRuntimeMethod("Parse", new[] { typeof(string) });
-                    if (parseMethod != null)
-                    {
-                        // Call the Parse method
-                        return parseMethod.Invoke(value, new object[] { });
-                    }
-                }
+                return convertedEnum;
+            }
+            
+            // Attempt 3: We essentially make a guess that to convert from a string
+            // to an arbitrary type T there will be a static method defined on type T called Parse
+            // that will take an argument of type string. i.e. T.Parse(string)->T we call this
+            // method to convert the string to the type required by the property.
+            var parsedValue = this.TryParseGenerically(sourceType, targetType, value);
+            if (parsedValue != null)
+            {
+                return parsedValue;
             }
 
-            return null;
+            // If all fails, we throw an exception
+            throw ConversionNotSupportedException.Create(sourceType, targetType, value);
         }
 
         public TTarget Convert<TSource, TTarget>(TSource value)
@@ -142,7 +141,7 @@ namespace TypeConverter
             var genericConverter = genericGetConverterForTypeMethod.Invoke(this, null);
             if (genericConverter == null)
             {
-                throw ConversionNotSupportedException.Create(sourceType, targetType, value);
+                return null;
             }
 
             var matchingConverterInterface = genericConverter.GetType().GetTypeInfo().ImplementedInterfaces.SingleOrDefault(i =>
@@ -169,6 +168,41 @@ namespace TypeConverter
 
                 return null;
             }
+        }
+
+        private object TryConvertEnumGenerically(Type sourceType, Type targetType, object value)
+        {
+            if (sourceType.GetTypeInfo().IsEnum)
+            {
+                return value.ToString();
+            }
+
+            if (targetType.GetTypeInfo().IsEnum)
+            {
+                return Enum.Parse(targetType, value.ToString(), true);
+            }
+
+            return null;
+        }
+
+        private object TryParseGenerically(Type sourceType, Type targetType, object value)
+        {
+            // Either of both, sourceType or targetType, need to be typeof(string)
+            if (sourceType == typeof(string) && targetType != typeof(string))
+            {
+                var parseMethod = targetType.GetRuntimeMethod("Parse", new[] { sourceType });
+                if (parseMethod != null)
+                {
+
+                    return parseMethod.Invoke(this, new[] { value });
+                }
+            }
+            else if (targetType == typeof(string) && sourceType != typeof(string))
+            {
+                return value.ToString();
+            }
+
+            return null;
         }
 
         public void Reset()

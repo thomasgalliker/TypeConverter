@@ -81,6 +81,8 @@
     <Compile Include="Converters\StringToUriConverterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConverterRegistryTests.cs" />
+    <Compile Include="Stubs\MyEnum.cs" />
+    <Compile Include="Stubs\MyEnumConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

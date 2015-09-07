@@ -3,6 +3,7 @@
 using FluentAssertions;
 
 using TypeConverter.Exceptions;
+using TypeConverter.Tests.Stubs;
 using TypeConverter.Tests.Testdata;
 
 using Xunit;
@@ -119,6 +120,66 @@ namespace TypeConverter.Tests
             convertedObject.Should().NotBeNull();
             convertedObject.Should().BeOfType<Uri>();
             convertedObject.As<Uri>().AbsoluteUri.Should().Be(InputString);
+
+            outputString.Should().NotBeNull();
+            outputString.Should().Be(InputString);
+        }
+
+        [Fact]
+        public void ShouldConvertEnumsImplicitly()
+        {
+            // Arrange
+            string inputString = MyEnum.TestValue.ToString();
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedObject = (MyEnum)converterRegistry.Convert(typeof(MyEnum), inputString);
+            var outputString = converterRegistry.Convert(typeof(string), convertedObject);
+
+            // Assert
+            convertedObject.Should().NotBeNull();
+            convertedObject.Should().BeOfType<MyEnum>();
+            convertedObject.Should().Be(MyEnum.TestValue);
+
+            outputString.Should().NotBeNull();
+            outputString.Should().Be(inputString);
+        }
+
+        [Fact]
+        public void ShouldConvertEnumsExplicitly()
+        {
+            // Arrange
+            string inputString = MyEnum.TestValue.ToString();
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+            converterRegistry.RegisterConverter<string, MyEnum>(() => new MyEnumConverter());
+            converterRegistry.RegisterConverter<MyEnum, string>(() => new MyEnumConverter());
+
+            // Act
+            var convertedObject = (MyEnum)converterRegistry.Convert<MyEnum>(inputString);
+            var outputString = converterRegistry.Convert<string>(convertedObject);
+
+            // Assert
+            convertedObject.Should().NotBeNull();
+            convertedObject.Should().BeOfType<MyEnum>();
+            convertedObject.Should().Be(MyEnum.TestValue);
+
+            outputString.Should().NotBeNull();
+            outputString.Should().Be(inputString);
+        }
+
+        [Fact]
+        public void ShouldConvertUsingGenericParseMethod()
+        {
+            // Arrange
+            const string InputString = "999";
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedObject = (int)converterRegistry.Convert(typeof(int), InputString);
+            var outputString = converterRegistry.Convert(typeof(string), convertedObject);
+
+            // Assert
+            convertedObject.Should().Be(999);
 
             outputString.Should().NotBeNull();
             outputString.Should().Be(InputString);
