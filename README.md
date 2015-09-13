@@ -1,9 +1,15 @@
-# TypeConverter 
- TypeConverter is a lightweight, portable class library which allows to convert between objects of different types. This library is shipped with some basic sample converters, however, you are free to write your own type converters and register them in the IConverterRegistry.
+<img src="https://raw.githubusercontent.com/thomasgalliker/TypeConverter/master/TypeConverter.NuGet/TypeConverterIcon.pngg" alt="TypeConverter">
 
-### Setup
-* This library is available on NuGet: https://www.nuget.org/packages/TypeConverter/
-* You can use this library in any .Net project which is compatible to PCL (e.g. Xamarin Android, iOS, Windows Phone, Windows Store, Universal Apps, etc.)
+# TypeConverter 
+TypeConverter is a lightweight, portable class library which allows to convert between objects of different types. This library is shipped with some basic sample converters, however, you are free to write your own type converters and register them in the IConverterRegistry.
+
+### Download and Install TypeConverter
+This library is available on NuGet: https://www.nuget.org/packages/TypeConverter/
+Use the following command to install TypeConverter using NuGet package manager console:
+
+    PM> Install-Package TypeConverter
+
+You can use this library in any .Net project which is compatible to PCL (e.g. Xamarin Android, iOS, Windows Phone, Windows Store, Universal Apps, etc.)
 
 ### API Usage
 #### Create your own type converter
@@ -43,3 +49,5 @@ Convert from System.Uri to string
 ```
 var uriAsString = converterRegistry.Convert<Uri, string>(uri);
 ```
+
+TypeConverter is Copyright &copy; 2015 [Thomas Galliker](https://ch.linkedin.com/in/thomasgalliker). Free for non-commercial use. For commercial use please contact the author.
