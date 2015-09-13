@@ -3,7 +3,7 @@ using System;
 
 using FluentAssertions;
 
-using TypeConverter.Tests.Testdata;
+using TypeConverter.Converters;
 
 using Xunit;
 

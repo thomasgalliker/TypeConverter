@@ -16,6 +16,7 @@ namespace TypeConverter
             this.converters = new Dictionary<Tuple<Type, Type>, Func<IConverter>>();
         }
 
+        /// <inheritdoc />
         public void RegisterConverter<TSource, TTarget>(Func<IConverter<TSource, TTarget>> converterFactory)
         {
             if (converterFactory == null)
@@ -29,6 +30,7 @@ namespace TypeConverter
             }
         }
 
+        /// <inheritdoc />
         public void RegisterConverter<TSource, TTarget>(Type converterType)
         {
             this.RegisterConverter(() => this.CreateConverterInstance<TSource, TTarget>(converterType));
@@ -61,16 +63,25 @@ namespace TypeConverter
             return null;
         }
 
-        public object Convert<TTarget>(object value)
+        /// <inheritdoc />
+        public TTarget Convert<TTarget>(object value)
         {
-            return this.Convert(value.GetType(), typeof(TTarget), value);
+            return (TTarget)this.Convert(value.GetType(), typeof(TTarget), value);
         }
 
+        /// <inheritdoc />
+        public TTarget Convert<TSource, TTarget>(TSource value)
+        {
+            return (TTarget)this.Convert(typeof(TSource), typeof(TTarget), value);
+        }
+
+        /// <inheritdoc />
         public object Convert<TSource>(Type targetType, TSource value)
         {
             return this.Convert(typeof(TSource), targetType, value);
         }
 
+        /// <inheritdoc />
         public object Convert(Type sourceType, Type targetType, object value)
         {
             if (sourceType == null)
@@ -88,21 +99,27 @@ namespace TypeConverter
                 throw new ArgumentNullException("value");
             }
 
-            // Attempt 1: Try to convert using registered converter
+            // Attempt 1: Is source type same as target type
+            if (sourceType == targetType)
+            {
+                return value;
+            }
+
+            // Attempt 2: Try to convert using registered converter
             var convertedValue = this.TryConvertGenerically(sourceType, targetType, value);
             if (convertedValue != null)
             {
                 return convertedValue;
             }
 
-            // Attempt 2: Try to convert generic enum
+            // Attempt 3: Try to convert generic enum
             var convertedEnum = this.TryConvertEnumGenerically(sourceType, targetType, value);
             if (convertedEnum != null)
             {
                 return convertedEnum;
             }
             
-            // Attempt 3: We essentially make a guess that to convert from a string
+            // Attempt 4: We essentially make a guess that to convert from a string
             // to an arbitrary type T there will be a static method defined on type T called Parse
             // that will take an argument of type string. i.e. T.Parse(string)->T we call this
             // method to convert the string to the type required by the property.
@@ -114,22 +131,6 @@ namespace TypeConverter
 
             // If all fails, we throw an exception
             throw ConversionNotSupportedException.Create(sourceType, targetType, value);
-        }
-
-        public TTarget Convert<TSource, TTarget>(TSource value)
-        {
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
-            }
-
-            var converter = this.GetConverterForType<TSource, TTarget>();
-            if (converter != null)
-            {
-                return converter.Convert(value);
-            }
-
-            throw ConversionNotSupportedException.Create(typeof(TSource), typeof(TTarget), value);
         }
 
         private object TryConvertGenerically(Type sourceType, Type targetType, object value)
@@ -155,6 +156,7 @@ namespace TypeConverter
             return convertedValue;
         }
 
+        /// <inheritdoc />
         public IConverter<TSource, TTarget> GetConverterForType<TSource, TTarget>()
         {
             lock (this.converters)
@@ -205,6 +207,7 @@ namespace TypeConverter
             return null;
         }
 
+        /// <inheritdoc />
         public void Reset()
         {
             lock (this.converters)

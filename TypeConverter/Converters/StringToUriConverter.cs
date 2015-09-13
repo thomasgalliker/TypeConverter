@@ -1,8 +1,6 @@
 ﻿using System;
 
-using TypeConverter.Converters;
-
-namespace TypeConverter.Tests.Testdata
+namespace TypeConverter.Converters
 {
     public class StringToUriConverter : IConverter<string, Uri>, IConverter<Uri, string>
     {

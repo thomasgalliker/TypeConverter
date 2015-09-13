@@ -2,9 +2,9 @@
 
 using FluentAssertions;
 
+using TypeConverter.Converters;
 using TypeConverter.Exceptions;
 using TypeConverter.Tests.Stubs;
-using TypeConverter.Tests.Testdata;
 
 using Xunit;
 
@@ -32,10 +32,9 @@ namespace TypeConverter.Tests
             // Arrange
             const string InputString = "http://www.google.com/";
             IConverterRegistry converterRegistry = new ConverterRegistry();
-            converterRegistry.RegisterConverter<Uri, string>(() => new StringToUriConverter());
 
             // Act
-            Action action = () => converterRegistry.Convert<string, string>(InputString);
+            Action action = () => converterRegistry.Convert<string, Uri>(InputString);
 
             // Assert
             Assert.Throws<ConversionNotSupportedException>(action);
@@ -146,6 +145,26 @@ namespace TypeConverter.Tests
         }
 
         [Fact]
+        public void ShouldConvertEnumsImplicitlyWithGenerics()
+        {
+            // Arrange
+            string inputString = MyEnum.TestValue.ToString();
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedObject = converterRegistry.Convert<MyEnum>(inputString);
+            var outputString = converterRegistry.Convert(typeof(string), convertedObject);
+
+            // Assert
+            convertedObject.Should().NotBeNull();
+            convertedObject.Should().BeOfType<MyEnum>();
+            convertedObject.Should().Be(MyEnum.TestValue);
+
+            outputString.Should().NotBeNull();
+            outputString.Should().Be(inputString);
+        }
+
+        [Fact]
         public void ShouldConvertEnumsExplicitly()
         {
             // Arrange
@@ -183,6 +202,20 @@ namespace TypeConverter.Tests
 
             outputString.Should().NotBeNull();
             outputString.Should().Be(InputString);
+        }
+
+        [Fact]
+        public void ShouldConvertIfSourceTypeIsEqualToTargetType()
+        {
+            // Arrange
+            const string InputString = "999";
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedObject = (string)converterRegistry.Convert(typeof(string), typeof(string), InputString);
+
+            // Assert
+            convertedObject.Should().Be(InputString);
         }
 
         [Fact]
