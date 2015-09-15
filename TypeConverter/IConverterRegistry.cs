@@ -62,13 +62,17 @@ namespace TypeConverter
         /// <param name="value">The source value to be converted.</param>
         object Convert(Type sourceType, Type targetType, object value);
 
-        TTarget TryConvert<TTarget>(object value);
+        /// <inheritdoc />
+        TTarget TryConvert<TTarget>(object value, TTarget defaultReturnValue = default(TTarget));
 
-        TTarget TryConvert<TSource, TTarget>(TSource value);
+        /// <inheritdoc />
+        TTarget TryConvert<TSource, TTarget>(TSource value, TTarget defaultReturnValue = default(TTarget));
 
-        object TryConvert<TSource>(Type targetType, TSource value);
+        /// <inheritdoc />
+        object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue = null);
 
-        object TryConvert(Type sourceType, Type targetType, object value);
+        /// <inheritdoc />
+        object TryConvert(Type sourceType, Type targetType, object value, object defaultReturnValue = null);
 
         /// <summary>
         /// Resets all registrations.

@@ -64,7 +64,6 @@ namespace TypeConverter
             return null;
         }
 
-
         /// <inheritdoc />
         public TTarget Convert<TTarget>(object value)
         {
@@ -77,14 +76,10 @@ namespace TypeConverter
         }
 
         /// <inheritdoc />
-        public TTarget TryConvert<TTarget>(object value)
+        public TTarget TryConvert<TTarget>(object value, TTarget defaultReturnValue = default(TTarget))
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
-            }
 
-            return (TTarget)this.DoConvert(value.GetType(), typeof(TTarget), value, throwIfConvertFails: false);
+            return (TTarget)this.DoConvert(value.GetType(), typeof(TTarget), value, defaultReturnValue, throwIfConvertFails: false);
         }
 
         /// <inheritdoc />
@@ -94,9 +89,9 @@ namespace TypeConverter
         }
 
         /// <inheritdoc />
-        public TTarget TryConvert<TSource, TTarget>(TSource value)
+        public TTarget TryConvert<TSource, TTarget>(TSource value, TTarget defaultReturnValue = default(TTarget))
         {
-            return (TTarget)this.DoConvert(typeof(TSource), typeof(TTarget), value, throwIfConvertFails: false);
+            return (TTarget)this.DoConvert(typeof(TSource), typeof(TTarget), value, defaultReturnValue, throwIfConvertFails: false);
         }
 
         /// <inheritdoc />
@@ -106,9 +101,9 @@ namespace TypeConverter
         }
 
         /// <inheritdoc />
-        public object TryConvert<TSource>(Type targetType, TSource value)
+        public object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue = null)
         {
-            return this.DoConvert(typeof(TSource), targetType, value, throwIfConvertFails: false);
+            return this.DoConvert(typeof(TSource), targetType, value, defaultReturnValue, throwIfConvertFails: false);
         }
 
         /// <inheritdoc />
@@ -118,13 +113,23 @@ namespace TypeConverter
         }
 
         /// <inheritdoc />
-        public object TryConvert(Type sourceType, Type targetType, object value)
+        public object TryConvert(Type sourceType, Type targetType, object value, object defaultReturnValue = null)
         {
-            return this.DoConvert(sourceType, targetType, value, throwIfConvertFails: false);
+            return this.DoConvert(sourceType, targetType, value, defaultReturnValue, throwIfConvertFails: false);
         }
 
-        private object DoConvert(Type sourceType, Type targetType, object value, bool throwIfConvertFails = true)
+        private object DoConvert(Type sourceType, Type targetType, object value, object defaultReturnValue = null, bool throwIfConvertFails = true)
         {
+            if (value == null)
+            {
+                if (throwIfConvertFails)
+                {
+                    return defaultReturnValue;
+                }
+
+                throw new ArgumentNullException("value");
+            }
+
             if (sourceType == null)
             {
                 throw new ArgumentNullException("sourceType");
@@ -133,11 +138,6 @@ namespace TypeConverter
             if (targetType == null)
             {
                 throw new ArgumentNullException("targetType");
-            }
-
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
             }
 
             // Attempt 1: Try to convert using registered converter
@@ -185,7 +185,7 @@ namespace TypeConverter
                 throw ConversionNotSupportedException.Create(sourceType, targetType, value);
             }
 
-            return targetType.GetDefaultValue();
+            return defaultReturnValue;
         }
 
         private object TryConvertGenerically(Type sourceType, Type targetType, object value)
