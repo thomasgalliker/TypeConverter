@@ -83,6 +83,7 @@
     <Compile Include="ConverterRegistryTests.cs" />
     <Compile Include="Stubs\MyEnum.cs" />
     <Compile Include="Stubs\MyEnumConverter.cs" />
+    <Compile Include="Stubs\TestStruct1.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

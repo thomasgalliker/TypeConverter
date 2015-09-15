@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 
 using TypeConverter.Exceptions;
+using TypeConverter.Extensions;
 
 namespace TypeConverter
 {
@@ -63,26 +64,66 @@ namespace TypeConverter
             return null;
         }
 
+
         /// <inheritdoc />
         public TTarget Convert<TTarget>(object value)
         {
-            return (TTarget)this.Convert(value.GetType(), typeof(TTarget), value);
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+
+            return (TTarget)this.DoConvert(value.GetType(), typeof(TTarget), value);
+        }
+
+        /// <inheritdoc />
+        public TTarget TryConvert<TTarget>(object value)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+
+            return (TTarget)this.DoConvert(value.GetType(), typeof(TTarget), value, throwIfConvertFails: false);
         }
 
         /// <inheritdoc />
         public TTarget Convert<TSource, TTarget>(TSource value)
         {
-            return (TTarget)this.Convert(typeof(TSource), typeof(TTarget), value);
+            return (TTarget)this.DoConvert(typeof(TSource), typeof(TTarget), value);
+        }
+
+        /// <inheritdoc />
+        public TTarget TryConvert<TSource, TTarget>(TSource value)
+        {
+            return (TTarget)this.DoConvert(typeof(TSource), typeof(TTarget), value, throwIfConvertFails: false);
         }
 
         /// <inheritdoc />
         public object Convert<TSource>(Type targetType, TSource value)
         {
-            return this.Convert(typeof(TSource), targetType, value);
+            return this.DoConvert(typeof(TSource), targetType, value);
+        }
+
+        /// <inheritdoc />
+        public object TryConvert<TSource>(Type targetType, TSource value)
+        {
+            return this.DoConvert(typeof(TSource), targetType, value, throwIfConvertFails: false);
         }
 
         /// <inheritdoc />
         public object Convert(Type sourceType, Type targetType, object value)
+        {
+            return this.DoConvert(sourceType, targetType, value);
+        }
+
+        /// <inheritdoc />
+        public object TryConvert(Type sourceType, Type targetType, object value)
+        {
+            return this.DoConvert(sourceType, targetType, value, throwIfConvertFails: false);
+        }
+
+        private object DoConvert(Type sourceType, Type targetType, object value, bool throwIfConvertFails = true)
         {
             if (sourceType == null)
             {
@@ -99,27 +140,36 @@ namespace TypeConverter
                 throw new ArgumentNullException("value");
             }
 
-            // Attempt 1: Is source type same as target type
-            if (sourceType == targetType)
-            {
-                return value;
-            }
-
-            // Attempt 2: Try to convert using registered converter
+            // Attempt 1: Try to convert using registered converter
+            // Having TryConvertGenerically as a first attempt, the user of this library has the chance
+            // to influence the conversion process at first place.
             var convertedValue = this.TryConvertGenerically(sourceType, targetType, value);
             if (convertedValue != null)
             {
                 return convertedValue;
             }
 
-            // Attempt 3: Try to convert generic enum
+            // Attempt 2: Is source type same as target type
+            if (sourceType == targetType || targetType.GetTypeInfo().IsAssignableFrom(sourceType.GetTypeInfo()))
+            {
+                return value;
+            }
+
+            // Attempt 3: Try to convert Nullable<T> to T respectively T to Nullable<T>
+            if ((sourceType.IsNullable() && Nullable.GetUnderlyingType(sourceType) == targetType) ||
+                 targetType.IsNullable() && Nullable.GetUnderlyingType(targetType) == sourceType)
+            {
+                return value;
+            }
+
+            // Attempt 4: Try to convert generic enum
             var convertedEnum = this.TryConvertEnumGenerically(sourceType, targetType, value);
             if (convertedEnum != null)
             {
                 return convertedEnum;
             }
             
-            // Attempt 4: We essentially make a guess that to convert from a string
+            // Attempt 5: We essentially make a guess that to convert from a string
             // to an arbitrary type T there will be a static method defined on type T called Parse
             // that will take an argument of type string. i.e. T.Parse(string)->T we call this
             // method to convert the string to the type required by the property.
@@ -129,8 +179,13 @@ namespace TypeConverter
                 return parsedValue;
             }
 
-            // If all fails, we throw an exception
-            throw ConversionNotSupportedException.Create(sourceType, targetType, value);
+            // If all fails, we either throw an exception or return a default target value
+            if (throwIfConvertFails)
+            {
+                throw ConversionNotSupportedException.Create(sourceType, targetType, value);
+            }
+
+            return targetType.GetDefaultValue();
         }
 
         private object TryConvertGenerically(Type sourceType, Type targetType, object value)

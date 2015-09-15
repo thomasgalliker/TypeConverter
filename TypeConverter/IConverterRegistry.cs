@@ -62,6 +62,14 @@ namespace TypeConverter
         /// <param name="value">The source value to be converted.</param>
         object Convert(Type sourceType, Type targetType, object value);
 
+        TTarget TryConvert<TTarget>(object value);
+
+        TTarget TryConvert<TSource, TTarget>(TSource value);
+
+        object TryConvert<TSource>(Type targetType, TSource value);
+
+        object TryConvert(Type sourceType, Type targetType, object value);
+
         /// <summary>
         /// Resets all registrations.
         /// </summary>

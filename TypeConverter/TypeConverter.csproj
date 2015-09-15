@@ -45,6 +45,7 @@
     <Compile Include="Converters\StringToBoolConverter.cs" />
     <Compile Include="Converters\StringToDoubleConverter.cs" />
     <Compile Include="Converters\StringToUriConverter.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="IConverter.cs" />
     <Compile Include="Converters\StringToIntegerConverter.cs" />
     <Compile Include="Exceptions\ConversionNotSupportedException.cs" />

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using FluentAssertions;
 
@@ -125,6 +126,34 @@ namespace TypeConverter.Tests
         }
 
         [Fact]
+        public void ShouldReturnDefaultValueWhenTryConvertToReferenceTypeFails()
+        {
+            // Arrange
+            const string InputString = "http://www.google.com/";
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedObject = converterRegistry.TryConvert<Uri>(InputString);
+
+            // Assert
+            convertedObject.Should().BeNull();
+        }
+
+        [Fact]
+        public void ShouldReturnDefaultValueWhenTryConvertToValueTypeFails()
+        {
+            // Arrange
+            TestStruct1 testStruct1 = new TestStruct1 { TestString = Guid.NewGuid().ToString() };
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedObject = converterRegistry.TryConvert<Guid>(testStruct1);
+
+            // Assert
+            convertedObject.Should().Be(Guid.Empty);
+        }
+
+        [Fact]
         public void ShouldConvertEnumsImplicitly()
         {
             // Arrange
@@ -216,6 +245,48 @@ namespace TypeConverter.Tests
 
             // Assert
             convertedObject.Should().Be(InputString);
+        }
+
+        [Fact]
+        public void ShouldConvertIfTargetTypeIsAssignableFromSourceType()
+        {
+            // Arrange
+            List<string> stringList = new List<string>{"a", "b", "c"};
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedList = (IEnumerable<string>)converterRegistry.Convert(typeof(IEnumerable<string>), stringList);
+
+            // Assert
+            convertedList.Should().BeEquivalentTo(stringList);
+        }
+
+        [Fact]
+        public void ShouldConvertNullableTypeToValueType()
+        {
+            // Arrange
+            bool? nullableValue = true;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var valueType = converterRegistry.Convert<bool>(nullableValue);
+
+            // Assert
+            valueType.Should().Be(nullableValue.Value);
+        }
+
+        [Fact]
+        public void ShouldConvertValueTypeToNullableType()
+        {
+            // Arrange
+            bool valueType = true;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var nullableValue = converterRegistry.Convert<bool?>(valueType);
+
+            // Assert
+            nullableValue.Should().Be(valueType);
         }
 
         [Fact]
