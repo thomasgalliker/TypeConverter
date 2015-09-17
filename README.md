@@ -12,7 +12,7 @@ You can use this library in any .Net project which is compatible to PCL (e.g. Xa
 
 ### API Usage
 #### Create your own type converter
-If you want to implement a type converter, you simple implement the IConverter<TFrom, TTo> interface where TFrom is the generic type from which you want to convert and TTo is the type to which you want to convert to.
+If you want to implement a type converter, you simply implement the IConverter<TFrom, TTo> interface where TFrom is the generic type from which you want to convert and TTo is the type to which you want to convert to.
 Following sample code illustrates a converter which converts between string and System.Uri.
 ```
 public class StringToUriConverter : IConverter<string, Uri>, IConverter<Uri, string>
