@@ -49,4 +49,5 @@ Convert from System.Uri to string
 var uriAsString = converterRegistry.Convert<Uri, string>(uri);
 ```
 
+### License
 TypeConverter is Copyright &copy; 2015 [Thomas Galliker](https://ch.linkedin.com/in/thomasgalliker). Free for non-commercial use. For commercial use please contact the author.
