@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
+using Guards;
+
 using TypeConverter.Exceptions;
 using TypeConverter.Extensions;
 
@@ -20,10 +22,7 @@ namespace TypeConverter
         /// <inheritdoc />
         public void RegisterConverter<TSource, TTarget>(Func<IConverter<TSource, TTarget>> converterFactory)
         {
-            if (converterFactory == null)
-            {
-                throw new ArgumentNullException("converterFactory");
-            }
+            Guard.ArgumentNotNull(() => converterFactory);
 
             lock (this.converters)
             {
@@ -39,17 +38,12 @@ namespace TypeConverter
 
         private IConverter<TSource, TTarget> CreateConverterInstance<TSource, TTarget>(Type converterType)
         {
-            if (converterType == null)
-            {
-                throw new ArgumentNullException("converterType");
-            }
+            Guard.ArgumentNotNull(() => converterType);
 
-            // Check type is a converter
             if (typeof(IConverter<TSource, TTarget>).GetTypeInfo().IsAssignableFrom(converterType.GetTypeInfo()))
             {
                 try
                 {
-                    // Create the type converter
                     return (IConverter<TSource, TTarget>)Activator.CreateInstance(converterType);
                 }
                 catch (Exception ex)
@@ -67,10 +61,7 @@ namespace TypeConverter
         /// <inheritdoc />
         public TTarget Convert<TTarget>(object value)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
-            }
+            Guard.ArgumentNotNull(() => value);
 
             return (TTarget)this.DoConvert(value.GetType(), typeof(TTarget), value);
         }
@@ -130,15 +121,8 @@ namespace TypeConverter
                 throw new ArgumentNullException("value");
             }
 
-            if (sourceType == null)
-            {
-                throw new ArgumentNullException("sourceType");
-            }
-
-            if (targetType == null)
-            {
-                throw new ArgumentNullException("targetType");
-            }
+            Guard.ArgumentNotNull(() => sourceType);
+            Guard.ArgumentNotNull(() => targetType);
 
             // Attempt 1: Try to convert using registered converter
             // Having TryConvertGenerically as a first attempt, the user of this library has the chance
