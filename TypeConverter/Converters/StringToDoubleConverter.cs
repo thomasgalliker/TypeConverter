@@ -1,5 +1,4 @@
-﻿
-namespace TypeConverter.Converters
+﻿namespace TypeConverter.Converters
 {
     public class StringToDoubleConverter : IConverter<string, double>, IConverter<double, string>
     {

@@ -13,6 +13,11 @@ namespace TypeConverter.Tests
 {
     public class ConverterRegistryTests
     {
+        public ConverterRegistryTests()
+        {
+            TypeHelper.IsCacheEnabled = false;
+        }
+
         [Fact]
         public void ShouldThrowConversionNotSupportedExceptionWhenTryingToConvertWithoutValidRegistration()
         {
@@ -251,7 +256,7 @@ namespace TypeConverter.Tests
         public void ShouldConvertIfTargetTypeIsAssignableFromSourceType()
         {
             // Arrange
-            List<string> stringList = new List<string>{"a", "b", "c"};
+            List<string> stringList = new List<string> { "a", "b", "c" };
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             // Act
@@ -288,6 +293,37 @@ namespace TypeConverter.Tests
             // Assert
             nullableValue.Should().Be(valueType);
         }
+
+        // Implicit Numeric Conversions Table (C# Reference)
+        // https://msdn.microsoft.com/en-us/library/y5b434w4.aspx
+
+        ////[Fact]
+        ////public void ShouldConvertDoubleToIntegerExplicitly()
+        ////{
+        ////    // Arrange
+        ////    double doubleValue = 999.99d;
+        ////    IConverterRegistry converterRegistry = new ConverterRegistry();
+
+        ////    // Act
+        ////    var convertedValue = converterRegistry.Convert<int>(doubleValue);
+
+        ////    // Assert
+        ////    convertedValue.Should().Be((int)doubleValue);
+        ////}
+
+        ////[Fact]
+        ////public void ShouldConvertULongToDecimalImplicitly()
+        ////{
+        ////    // Arrange
+        ////    ulong ulongValue = 999UL;
+        ////    IConverterRegistry converterRegistry = new ConverterRegistry();
+
+        ////    // Act
+        ////    var convertedValue = converterRegistry.Convert<decimal>(ulongValue);
+
+        ////    // Assert
+        ////    convertedValue.Should().Be(Convert.ToDecimal(ulongValue));
+        ////}
 
         [Fact]
         public void ShouldResetRegistrations()

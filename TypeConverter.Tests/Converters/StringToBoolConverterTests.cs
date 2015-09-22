@@ -1,6 +1,4 @@
-﻿
-
-using FluentAssertions;
+﻿using FluentAssertions;
 
 using TypeConverter.Converters;
 

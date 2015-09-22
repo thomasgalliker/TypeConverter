@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace TypeConverter.Extensions
@@ -32,6 +33,35 @@ namespace TypeConverter.Extensions
             }
 
             return null;
+        }
+
+        public static IEnumerable<MethodInfo> GetDeclaredMethodsRecursively(this Type type)
+        {
+            return GetDeclaredMethodsRecursively(type.GetTypeInfo());
+        }
+
+        public static IEnumerable<MethodInfo> GetDeclaredMethodsRecursively(this TypeInfo typeInfo)
+        {
+            if (typeInfo == null)
+            {
+                return null;
+            }
+
+            var methods = GetDeclaredMethodsRecursively(typeInfo.AsType(), new List<MethodInfo>());
+            return methods;
+        }
+
+        private static IEnumerable<MethodInfo> GetDeclaredMethodsRecursively(this Type type, List<MethodInfo> methods)
+        {
+            if (type == null)
+            {
+                return methods;
+            }
+
+            var typeInfo = type.GetTypeInfo();
+            methods.AddRange(typeInfo.DeclaredMethods);
+
+            return GetDeclaredMethodsRecursively(typeInfo.BaseType, methods);
         }
     }
 }
