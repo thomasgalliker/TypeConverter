@@ -4,6 +4,7 @@ using System.Reflection;
 using FluentAssertions;
 
 using TypeConverter.Extensions;
+using TypeConverter.Tests.Stubs;
 
 using Xunit;
 

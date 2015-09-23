@@ -1,6 +1,5 @@
-using System;
 
-namespace TypeConverter.Tests
+namespace TypeConverter.Tests.Stubs
 {
     public class Operators2
     {
@@ -16,7 +15,7 @@ namespace TypeConverter.Tests
 
         public static explicit operator Operators2(int i)
         {
-            throw new NotImplementedException();
+            return new Operators2();
         }
     }
 }

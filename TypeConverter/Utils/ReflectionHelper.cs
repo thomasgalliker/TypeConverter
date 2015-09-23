@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using LockIntegralType = System.Int32;
 
-namespace TypeConverter
+namespace TypeConverter.Utils
 {
     /// <summary>
     ///     Delegate that represents a dynamic-call to an untyped delegate.

@@ -1,12 +1,12 @@
 using System;
 
-namespace TypeConverter.Tests
+namespace TypeConverter.Tests.Stubs
 {
     public struct OperatorsStruct
     {
         public static implicit operator string(OperatorsStruct o)
         {
-            throw new NotImplementedException();
+            return "OperatorsStruct";
         }
 
         public static implicit operator int(OperatorsStruct o)
@@ -16,7 +16,7 @@ namespace TypeConverter.Tests
 
         public static explicit operator decimal?(OperatorsStruct o)
         {
-            throw new NotImplementedException();
+            return 1.0m;
         }
 
         public static explicit operator StringSplitOptions(OperatorsStruct o)

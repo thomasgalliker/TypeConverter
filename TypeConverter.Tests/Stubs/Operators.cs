@@ -1,12 +1,12 @@
 using System;
 
-namespace TypeConverter.Tests
+namespace TypeConverter.Tests.Stubs
 {
     public class Operators
     {
         public static implicit operator string(Operators o)
         {
-            throw new NotImplementedException();
+            return "Operators";
         }
 
         public static implicit operator int(Operators o)
@@ -16,7 +16,7 @@ namespace TypeConverter.Tests
 
         public static explicit operator decimal?(Operators o)
         {
-            throw new NotImplementedException();
+            return 1.0m;
         }
 
         public static explicit operator StringSplitOptions(Operators o)
@@ -26,7 +26,7 @@ namespace TypeConverter.Tests
 
         public static explicit operator Operators2(Operators o)
         {
-            throw new NotImplementedException();
+            return new Operators2();
         }
     }
 }

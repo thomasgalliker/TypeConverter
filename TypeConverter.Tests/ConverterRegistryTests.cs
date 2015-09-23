@@ -6,6 +6,7 @@ using FluentAssertions;
 using TypeConverter.Converters;
 using TypeConverter.Exceptions;
 using TypeConverter.Tests.Stubs;
+using TypeConverter.Utils;
 
 using Xunit;
 

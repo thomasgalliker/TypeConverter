@@ -1,6 +1,6 @@
 using System;
 
-namespace TypeConverter.Tests
+namespace TypeConverter.Tests.Stubs
 {
     public class DerivedOperators : Operators
     {
