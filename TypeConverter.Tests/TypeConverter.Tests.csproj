@@ -37,6 +37,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>..\TypeConverter\TypeConverterKey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="FluentAssertions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=33f2691a05b67b6a, processorArchitecture=MSIL">
       <HintPath>..\packages\FluentAssertions.4.0.0\lib\net45\FluentAssertions.dll</HintPath>
@@ -93,6 +99,9 @@
     <Compile Include="Utils\CompilerConversionTestCase.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\TypeConverter\TypeConverterKey.snk">
+      <Link>TypeConverterKey.snk</Link>
+    </None>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
