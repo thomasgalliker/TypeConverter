@@ -7,14 +7,14 @@ using Guards;
 
 namespace TypeConverter.Extensions
 {
-    public static class TypeExtensions
+    internal static class TypeExtensions
     {
-        public static IEnumerable<MethodInfo> GetDeclaredMethodsRecursively(this Type type)
+        internal static IEnumerable<MethodInfo> GetDeclaredMethodsRecursively(this Type type)
         {
             return GetDeclaredMethodsRecursively(type.GetTypeInfo());
         }
 
-        public static IEnumerable<MethodInfo> GetDeclaredMethodsRecursively(this TypeInfo typeInfo)
+        internal static IEnumerable<MethodInfo> GetDeclaredMethodsRecursively(this TypeInfo typeInfo)
         {
             if (typeInfo == null)
             {
@@ -38,7 +38,7 @@ namespace TypeConverter.Extensions
             return GetDeclaredMethodsRecursively(typeInfo.BaseType, methods);
         }
 
-        public static string GetFormattedName(this Type type)
+        internal static string GetFormattedName(this Type type)
         {
             Guard.ArgumentNotNull(() => type);
 
@@ -51,7 +51,7 @@ namespace TypeConverter.Extensions
             return string.Format("{0}<{1}>", type.Name.Substring(0, type.Name.IndexOf('`')), string.Join(", ", typeInfo.GenericTypeArguments.Select(t => t.GetFormattedName())));
         }
 
-        public static string GetFormattedFullname(this Type type)
+        internal static string GetFormattedFullname(this Type type)
         {
             Guard.ArgumentNotNull(() => type);
 

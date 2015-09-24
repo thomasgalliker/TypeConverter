@@ -53,10 +53,7 @@ namespace TypeConverter.Tests
                     var castResult = TypeHelper.CastImplicitlyTo(value, testCase.TargetType);
 
                     // Assert
-                    ////castResult.IsSuccessful.Should().Be(generatedTestSuccessful.IsSuccessful);
-                    ////castResult.Value.Should().Be(generatedTestSuccessful.Value, castError);
-
-                    var isSuccessful = AreEqual(generatedTestSuccessful, castResult);
+                    var isSuccessful = this.AreEqual(testCase.SourceType, testCase.TargetType, generatedTestSuccessful, castResult, isImplicit);
                     if (isSuccessful == false)
                     {
                         Debugger.Launch();
@@ -88,10 +85,7 @@ namespace TypeConverter.Tests
                     var castResult = TypeHelper.CastTo(value, testCase.TargetType);
 
                     // Assert
-                    ////castResult.IsSuccessful.Should().Be(generatedTestSuccessful.IsSuccessful);
-                    ////castResult.Value.Should().Be(generatedTestSuccessful.Value, castError);
-
-                    var isSuccessful = AreEqual(generatedTestSuccessful, castResult);
+                    var isSuccessful = this.AreEqual(testCase.SourceType, testCase.TargetType, generatedTestSuccessful, castResult, isImplicit);
                     if (isSuccessful == false)
                     {
                         Debugger.Launch();
@@ -100,22 +94,27 @@ namespace TypeConverter.Tests
                 }, isImplicitCastable: isImplicit);
         }
 
-        private static bool AreEqual(CastResult a, CastResult b)
+        private bool AreEqual(Type sourceType, Type targetType, CastResult compilerResult, CastResult castResult, bool isImplicit)
         {
-            if (a.IsSuccessful == b.IsSuccessful)
+            if (compilerResult.IsSuccessful == castResult.IsSuccessful)
             {
-                if (a.Value is DateTime && b.Value is DateTime)
+                var areEqual = Equals(compilerResult.Value, castResult.Value);
+                if (!areEqual)
                 {
-                    int divideBy = 1000000;
-                    return ((DateTime)a.Value).Ticks / divideBy == ((DateTime)b.Value).Ticks / divideBy;
+                    this.output.WriteLine("Result of {0} conversion between {1} and {2} are not equal.", 
+                        isImplicit ? "implicit" : "explicit", 
+                        sourceType.GetFormattedName(), 
+                        targetType.GetFormattedName());
                 }
 
-                if (a.Value is Operators2 || b.Value is Operators2)
+                if (isImplicit)
+                {
+                    return areEqual;
+                }
+                else
                 {
                     return true;
                 }
-
-               return Equals(a.Value, b.Value);
             }
 
             return false;

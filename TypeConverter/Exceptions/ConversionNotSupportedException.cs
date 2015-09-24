@@ -4,7 +4,7 @@ using TypeConverter.Extensions;
 
 namespace TypeConverter.Exceptions
 {
-    public class ConversionNotSupportedException : Exception
+    internal class ConversionNotSupportedException : Exception
     {
         private ConversionNotSupportedException(string message, Exception innerException)
             : base(message, innerException)

@@ -170,8 +170,7 @@ namespace TypeConverter
         private object TryConvertGenericallyUsingConverterStrategy(Type sourceType, Type targetType, object value)
         {
             // Call generic method GetConverterForType to retrieve generic IConverter<TSource, TTarget>
-            ////ReflectionHelper.GetMethod(() => this.GetConverterForType<object, object>());
-            var getConverterForTypeMethod = this.GetType().GetTypeInfo().GetDeclaredMethod("GetConverterForType");
+            var getConverterForTypeMethod = ReflectionHelper.GetMethod(() => this.GetConverterForType<object, object>()).GetGenericMethodDefinition();
             var genericGetConverterForTypeMethod = getConverterForTypeMethod.MakeGenericMethod(sourceType, targetType);
 
             var genericConverter = genericGetConverterForTypeMethod.Invoke(this, null);
