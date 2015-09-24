@@ -298,33 +298,33 @@ namespace TypeConverter.Tests
         // Implicit Numeric Conversions Table (C# Reference)
         // https://msdn.microsoft.com/en-us/library/y5b434w4.aspx
 
-        ////[Fact]
-        ////public void ShouldConvertDoubleToIntegerExplicitly()
-        ////{
-        ////    // Arrange
-        ////    double doubleValue = 999.99d;
-        ////    IConverterRegistry converterRegistry = new ConverterRegistry();
+        [Fact]
+        public void ShouldConvertDoubleToIntegerExplicitly()
+        {
+            // Arrange
+            double doubleValue = 999.99d;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
 
-        ////    // Act
-        ////    var convertedValue = converterRegistry.Convert<int>(doubleValue);
+            // Act
+            var convertedValue = converterRegistry.Convert<int>(doubleValue);
 
-        ////    // Assert
-        ////    convertedValue.Should().Be((int)doubleValue);
-        ////}
+            // Assert
+            convertedValue.Should().Be((int)doubleValue);
+        }
 
-        ////[Fact]
-        ////public void ShouldConvertULongToDecimalImplicitly()
-        ////{
-        ////    // Arrange
-        ////    ulong ulongValue = 999UL;
-        ////    IConverterRegistry converterRegistry = new ConverterRegistry();
+        [Fact]
+        public void ShouldConvertULongToDecimalImplicitly()
+        {
+            // Arrange
+            ulong ulongValue = 999UL;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
 
-        ////    // Act
-        ////    var convertedValue = converterRegistry.Convert<decimal>(ulongValue);
+            // Act
+            var convertedValue = converterRegistry.Convert<decimal>(ulongValue);
 
-        ////    // Assert
-        ////    convertedValue.Should().Be(Convert.ToDecimal(ulongValue));
-        ////}
+            // Assert
+            convertedValue.Should().Be(Convert.ToDecimal(ulongValue));
+        }
 
         [Fact]
         public void ShouldResetRegistrations()

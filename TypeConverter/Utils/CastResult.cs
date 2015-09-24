@@ -4,7 +4,7 @@ using Guards;
 
 namespace TypeConverter.Utils
 {
-    public class CastResult
+    internal class CastResult // TODO: make internal
     {
         public CastResult(object value)
         {

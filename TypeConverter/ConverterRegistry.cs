@@ -6,7 +6,7 @@ using System.Reflection;
 using Guards;
 
 using TypeConverter.Exceptions;
-using TypeConverter.Extensions;
+using TypeConverter.Utils;
 
 namespace TypeConverter
 {
@@ -49,6 +49,7 @@ namespace TypeConverter
                 catch (Exception ex)
                 {
                     ////LogLog.Error(DeclaringType, "Cannot CreateConverterInstance of type [" + converterType.FullName + "], Exception in call to Activator.CreateInstance", ex);
+                    throw;
                 }
             }
             else
@@ -125,35 +126,29 @@ namespace TypeConverter
             Guard.ArgumentNotNull(() => targetType);
 
             // Attempt 1: Try to convert using registered converter
-            // Having TryConvertGenerically as a first attempt, the user of this library has the chance
+            // Having TryConvertGenericallyUsingConverterStrategy as a first attempt, the user of this library has the chance
             // to influence the conversion process at first place.
-            var convertedValue = this.TryConvertGenerically(sourceType, targetType, value);
+            var convertedValue = this.TryConvertGenericallyUsingConverterStrategy(sourceType, targetType, value);
             if (convertedValue != null)
             {
                 return convertedValue;
             }
 
-            // Attempt 2: Is source type same as target type
-            if (sourceType == targetType || targetType.GetTypeInfo().IsAssignableFrom(sourceType.GetTypeInfo()))
+            // Attempt 2: Use implicit or explicit casting if supported
+            var castedValue = TypeHelper.CastTo(value, targetType);
+            if (castedValue != null && castedValue.IsSuccessful)
             {
-                return value;
+                return castedValue.Value;
             }
 
-            // Attempt 3: Try to convert Nullable<T> to T respectively T to Nullable<T>
-            if ((sourceType.IsNullable() && Nullable.GetUnderlyingType(sourceType) == targetType) ||
-                 targetType.IsNullable() && Nullable.GetUnderlyingType(targetType) == sourceType)
-            {
-                return value;
-            }
-
-            // Attempt 4: Try to convert generic enum
+            // Attempt 3: Try to convert generic enum
             var convertedEnum = this.TryConvertEnumGenerically(sourceType, targetType, value);
             if (convertedEnum != null)
             {
                 return convertedEnum;
             }
             
-            // Attempt 5: We essentially make a guess that to convert from a string
+            // Attempt 45: We essentially make a guess that to convert from a string
             // to an arbitrary type T there will be a static method defined on type T called Parse
             // that will take an argument of type string. i.e. T.Parse(string)->T we call this
             // method to convert the string to the type required by the property.
@@ -172,9 +167,10 @@ namespace TypeConverter
             return defaultReturnValue;
         }
 
-        private object TryConvertGenerically(Type sourceType, Type targetType, object value)
+        private object TryConvertGenericallyUsingConverterStrategy(Type sourceType, Type targetType, object value)
         {
             // Call generic method GetConverterForType to retrieve generic IConverter<TSource, TTarget>
+            ////ReflectionHelper.GetMethod(() => this.GetConverterForType<object, object>());
             var getConverterForTypeMethod = this.GetType().GetTypeInfo().GetDeclaredMethod("GetConverterForType");
             var genericGetConverterForTypeMethod = getConverterForTypeMethod.MakeGenericMethod(sourceType, targetType);
 
@@ -185,7 +181,7 @@ namespace TypeConverter
             }
 
             var matchingConverterInterface = genericConverter.GetType().GetTypeInfo().ImplementedInterfaces.SingleOrDefault(i =>
-                i.GenericTypeArguments.Count() == 2 && 
+                i.GenericTypeArguments.Length == 2 && 
                 i.GenericTypeArguments[0] == sourceType && 
                 i.GenericTypeArguments[1] == targetType);
 

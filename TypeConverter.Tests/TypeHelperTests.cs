@@ -11,6 +11,7 @@ using Microsoft.CSharp;
 
 using TypeConverter.Extensions;
 using TypeConverter.Tests.Stubs;
+using TypeConverter.Tests.Utils;
 using TypeConverter.Utils;
 
 using Xunit;
@@ -28,13 +29,15 @@ namespace TypeConverter.Tests
         }
 
         ////[Fact]
-        ////public void ShouldSucceedIsImplicitlyCastableTo()
+        ////public void ShouldIsImplicitlyCastableTo()
         ////{
         ////    this.RunTests((from, to) => from.IsImplicitlyCastableTo(to), isImplicitCastable: true);
         ////}
 
+        private static string castError = "Casted target value does not equal to given source value.";
+
         [Fact]
-        public void ShouldSucceedCastToImplicitly()
+        public void ShoulSuccessfullyCastToImplicitly()
         {
             TypeHelper.IsCacheEnabled = false;
             bool isImplicit = true;
@@ -50,17 +53,23 @@ namespace TypeConverter.Tests
                     var castResult = TypeHelper.CastImplicitlyTo(value, testCase.TargetType);
 
                     // Assert
-                    var succeeded = castResult.IsSuccessful == generatedTestSuccessful;
-                    return succeeded;
+                    ////castResult.IsSuccessful.Should().Be(generatedTestSuccessful.IsSuccessful);
+                    ////castResult.Value.Should().Be(generatedTestSuccessful.Value, castError);
+
+                    var isSuccessful = AreEqual(generatedTestSuccessful, castResult);
+                    if (isSuccessful == false)
+                    {
+                        Debugger.Launch();
+                    }
+                    return isSuccessful;
                 }, isImplicitCastable: isImplicit);
         }
 
         ////[Fact]
-        ////public void ShouldSucceedIsCastableTo()
+        ////public void ShouldIsCastableTo()
         ////{
         ////    this.RunTests((from, to) => from.IsCastableTo(to), isImplicitCastable: false);
         ////}
-
 
         [Fact]
         public void ShouldCastToExplicitly()
@@ -79,9 +88,53 @@ namespace TypeConverter.Tests
                     var castResult = TypeHelper.CastTo(value, testCase.TargetType);
 
                     // Assert
-                    var succeeded = castResult.IsSuccessful == generatedTestSuccessful;
-                    return succeeded;
+                    ////castResult.IsSuccessful.Should().Be(generatedTestSuccessful.IsSuccessful);
+                    ////castResult.Value.Should().Be(generatedTestSuccessful.Value, castError);
+
+                    var isSuccessful = AreEqual(generatedTestSuccessful, castResult);
+                    if (isSuccessful == false)
+                    {
+                        Debugger.Launch();
+                    }
+                    return isSuccessful;
                 }, isImplicitCastable: isImplicit);
+        }
+
+        private static bool AreEqual(CastResult a, CastResult b)
+        {
+            if (a.IsSuccessful == b.IsSuccessful)
+            {
+                if (a.Value is DateTime && b.Value is DateTime)
+                {
+                    int divideBy = 1000000;
+                    return ((DateTime)a.Value).Ticks / divideBy == ((DateTime)b.Value).Ticks / divideBy;
+                }
+
+                if (a.Value is Operators2 || b.Value is Operators2)
+                {
+                    return true;
+                }
+
+               return Equals(a.Value, b.Value);
+            }
+
+            return false;
+        }
+
+        [Fact]
+        public void FactMethodName()
+        {
+            // Arrange
+            Operators2 o1 = new Operators2();
+            Operators2 o2 = new Operators2();
+
+            // Act
+            var objectEquals = Equals(o1, o2);
+            var operatorsEquals = o1.Equals(o2);
+
+            // Assert
+            objectEquals.Should().BeTrue();
+            operatorsEquals.Should().BeTrue();
         }
 
         [Fact]
@@ -101,6 +154,19 @@ namespace TypeConverter.Tests
 
             // Assert
             values.Should().HaveCount(allTypesToConsider.Count);
+        }
+
+        [Fact]
+        public void ShouldSwollowInvalidProgramExceptionWhenNullableDecimalIsCastedToOperators2()
+        {
+            // Arrange
+            decimal? obj = 1234m;
+
+            // Act
+            var castedValue = this.CastValueWithGeneratedCode(obj, typeof(Nullable<decimal>), typeof(Operators2), false);
+
+            // Assert
+            castedValue.IsSuccessful.Should().BeTrue();
         }
 
         private void RunTests(Func<CompilerConversionTestCase, bool> isCastableFunc, bool isImplicitCastable)
@@ -214,11 +280,11 @@ namespace TypeConverter.Tests
             }
             if (type == typeof(DateTime) || type == typeof(DateTime?))
             {
-                return DateTime.Now;
+                return DateTime.MaxValue;
             }
             if (type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?))
             {
-                return DateTimeOffset.Now;
+                return DateTimeOffset.MaxValue;
             }
             if (type == typeof(TimeSpan) || type == typeof(TimeSpan?))
             {
@@ -333,44 +399,6 @@ namespace TypeConverter.Tests
             return allTypesToConsider;
         }
 
-        [DebuggerDisplay("SourceType = {SourceType}, TargetType = {TargetType}, IsCompilable = {IsCompilable}")]
-        private class CompilerConversionTestCase
-        {
-            public CompilerConversionTestCase(Type sourceType, Type targetType, string codeline, CompilerError compilerError)
-            {
-                this.SourceType = sourceType;
-                this.TargetType = targetType;
-                this.Codeline = codeline;
-                this.CompilerError = compilerError;
-            }
-
-            public Type SourceType { get; private set; }
-
-            public Type TargetType { get; private set; }
-
-            public string Codeline { get; private set; }
-
-            public CompilerError CompilerError { get; private set; }
-
-            public bool IsCompilable
-            {
-                get
-                {
-                    return this.CompilerError == null;
-                }
-            }
-        }
-
-        private static string GetCodeline(int index, Type sourceType, Type targetType, bool isImplicit)
-        {
-            return string.Format(
-                "{0} var{1} = {2}Get<{3}>();",
-                targetType.GetFormattedFullname(),
-                index,
-                isImplicit ? string.Empty : "(" + targetType.GetFormattedFullname() + ")",
-                sourceType.GetFormattedFullname());
-        }
-
         private List<CompilerConversionTestCase> GenerateTestCases(IEnumerable<Type> allTypes, bool isImplicit)
         {
             // gather all pairs
@@ -407,24 +435,27 @@ namespace TypeConverter.Tests
             return testCases;
         }
 
-
-        [Fact]
-        public void TestCompiler()
+        private static string GetCodeline(int index, Type sourceType, Type targetType, bool isImplicit)
         {
-            decimal? value = 1234;
-            Operators2 x = (Operators2)value;
+            return string.Format(
+                "{0} var{1} = {2}Get<{3}>();",
+                targetType.GetFormattedFullname(),
+                index,
+                isImplicit ? string.Empty : "(" + targetType.GetFormattedFullname() + ")",
+                sourceType.GetFormattedFullname());
         }
 
-        private bool CastValueWithGeneratedCode(object value, Type sourceType, Type targetType, bool isImplicit)
+        private CastResult CastValueWithGeneratedCode(object value, Type sourceType, Type targetType, bool isImplicit)
         {
             string className = "GeneratedTestClass";
             string methodName = "RunTest";
-            string line = string.Format(
-                "{0} x = {1}value;",
+            string castLine = string.Format(
+                "{0} x = {1}value; return x;",
                 targetType.GetFormattedFullname(),
                 isImplicit ? string.Empty : "(" + targetType.GetFormattedFullname() + ")");
 
-            string code = "public class " + className + "{ public void " + methodName + "(" + sourceType.GetFormattedFullname() + " value) {" + line + "}}";
+            string code = "public class " + className + " { public " + targetType.GetFormattedFullname() + " " + methodName + "(" + sourceType.GetFormattedFullname() + " value)" +
+                          "{" + castLine + "}}";
 
             using (CSharpCodeProvider provider = new CSharpCodeProvider())
             {
@@ -435,23 +466,33 @@ namespace TypeConverter.Tests
                 var compilationResult = provider.CompileAssemblyFromSource(compilerParams, code);
                 if (compilationResult.Errors.HasErrors)
                 {
-                    return false;
+                    return new CastResult(compilationResult.Errors);
                 }
 
                 var generatedClass = compilationResult.CompiledAssembly.GetType(className);
 
-                var obj = Activator.CreateInstance(generatedClass);
+                var instance = Activator.CreateInstance(generatedClass);
                 var testMethod = generatedClass.GetMethod(methodName);
 
                 try
                 {
-                    testMethod.Invoke(obj, new[] { value });
-                    return true;
+                    var castedValue = testMethod.Invoke(instance, new[] { value });
+                    return new CastResult(castedValue);
+                }
+                catch (TargetInvocationException ex)
+                {
+                    if (ex.InnerException is InvalidProgramException)
+                    {
+                        // This is most probably an error in Roslyn compiler.
+                        // See http://stackoverflow.com/questions/18342943/serious-bugs-with-lifted-nullable-conversions-from-int-allowing-conversion-from
+                        return new CastResult(value);
+                    }
+
+                    return new CastResult(ex);
                 }
                 catch (Exception ex)
                 {
-                    this.output.WriteLine(ex.ToString());
-                    return false;
+                    return new CastResult(ex);
                 }
             }
         }
