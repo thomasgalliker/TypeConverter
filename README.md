@@ -3,11 +3,12 @@
 TypeConverter is a lightweight, portable class library which allows to convert between objects of different types. The philosophy behind TypeConverter is that type conversion should no longer be a painfull topic to developers. As a developer, you simply specify source and target type and pass in your desired object which you want to convert.
 
 This library is shipped with some basic sample conversion strategies, however, you are free to write your own type converters and register them in the IConverterRegistry. The most important type conversions provided by the .Net framework are integrated into TypeConverter. However, your own converters are always preferred over the .Net integrated default converstion/casting strategy. Following order of priority is respected:
-- Attempt 1: Try to convert using registered converters
-- Attempt 2: Is source type same as target type
-- Attempt 3: Try to convert Nullable<T> to T respectively T to Nullable<T>
-- Attempt 4: Try to parse from/to enum value if either source or target type is an enum
-- Attempt 5: Try to use String.Parse if either source or target type is a string
+- Attempt 1: Try to convert using registered, user-defined IConverters
+- Attempt 2: Try to cast implicitly or explicitly to the target type
+- Attempt 3: Try to convert between string and enum value if either source or target type is an enum resp. a string
+- Attempt 4: Try to use String.Parse if either source or target type is a string
+
+If all attempts fail, the Convert method throws a ConversionNotSupportedException with the specified reason. TryConvert does return null if no conversion could be done.
 
 ### Download and Install TypeConverter
 This library is available on NuGet: https://www.nuget.org/packages/TypeConverter/
