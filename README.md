@@ -4,9 +4,11 @@ TypeConverter is a lightweight, portable class library which allows to convert b
 
 This library is shipped with some basic sample conversion strategies, however, you are free to write your own type converters and register them in the IConverterRegistry. The most important type conversions provided by the .Net framework are integrated into TypeConverter. However, your own converters are always preferred over the .Net integrated default converstion/casting strategy. Following order of priority is respected:
 - Attempt 1: Try to convert using registered, user-defined IConverters
-- Attempt 2: Try to cast implicitly or explicitly to the target type
-- Attempt 3: Try to convert between string and enum value if either source or target type is an enum resp. a string
-- Attempt 4: Try to use String.Parse if either source or target type is a string
+- Attempt 2: Return source value if source and target type are the same
+- Attempt 3: Try to cast implicitly to the target type
+- Attempt 4: Try to cast explicitly to the target type
+- Attempt 5: Try to convert between string and enum value if either source or target type is an enum resp. a string
+- Attempt 6: Try to use String.Parse if either source or target type is a string
 
 If all attempts fail, the Convert method throws a ConversionNotSupportedException with the specified reason. TryConvert does return null if no conversion could be done.
 
