@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using FluentAssertions;
 
@@ -280,41 +279,8 @@ namespace TypeConverter.Tests
                        castResult,
                        castFlag);
 
-                if (isSuccessful == false)
-                {
-                    Debugger.Launch();
-                }
-
                 return isSuccessful;
             }, castFlag: castFlag);
-        }
-
-        [Fact]
-        public void ShouldConvertDerivedOperators()
-        {
-            // Arrange
-            CastTestRunner.CastFlag castFlag = CastTestRunner.CastFlag.Implicit;
-            IConverterRegistry converterRegistry = new ConverterRegistry();
-
-            var testCase = new CompilerConversionTestCase(typeof(DerivedOperators), typeof(Operators2), "", null);
-            //var testCase = new CompilerConversionTestCase(typeof(Operators), typeof(decimal), "", null);
-            var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
-            var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
-
-            // Act
-            var convertedObject = converterRegistry.TryConvert(testCase.SourceType, testCase.TargetType, value);
-
-            // Assert
-            var castResult = new CastResult(convertedObject);
-            var isSuccessful = CastTestRunner.AreEqual(
-                   this.testOutputHelper,
-                   testCase.SourceType,
-                   testCase.TargetType,
-                   generatedTestSuccessful,
-                   castResult,
-                   castFlag);
-
-            isSuccessful.Should().BeTrue();
         }
 
         [Fact]

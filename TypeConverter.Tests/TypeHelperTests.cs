@@ -4,7 +4,6 @@ using System.Linq;
 
 using FluentAssertions;
 
-
 using TypeConverter.Extensions;
 using TypeConverter.Tests.Stubs;
 using TypeConverter.Tests.Utils;
@@ -24,45 +23,29 @@ namespace TypeConverter.Tests
             this.testOutputHelper = testOutputHelper;
         }
 
-        ////[Fact]
-        ////public void ShouldIsImplicitlyCastableTo()
-        ////{
-        ////    CastTestRunner.RunTests((from, to) => from.IsImplicitlyCastableTo(to), castFlag: true);
-        ////}
-
         [Fact]
         public void ShouldRunAllImplicitCasts()
         {
             TypeHelper.IsCacheEnabled = false;
             CastTestRunner.CastFlag castFlag = CastTestRunner.CastFlag.Implicit;
 
-            CastTestRunner.RunTests((testCase) =>
-                {
-                    // Arrange
-                    var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
-                    var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
+            CastTestRunner.RunTests(
+                (testCase) =>
+                    {
+                        // Arrange
+                        var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
+                        var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
 
-                    // Act
-                    var castResult = TypeHelper.CastImplicitlyTo(value, testCase.TargetType);
+                        // Act
+                        var castResult = TypeHelper.CastImplicitlyTo(value, testCase.TargetType);
 
-                    // Assert
-                    var isSuccessful = CastTestRunner.AreEqual(
-                        this.testOutputHelper,
-                        testCase.SourceType,
-                        testCase.TargetType,
-                        generatedTestSuccessful,
-                        castResult,
-                        castFlag);
+                        // Assert
+                        var isSuccessful = CastTestRunner.AreEqual(this.testOutputHelper, testCase.SourceType, testCase.TargetType, generatedTestSuccessful, castResult, castFlag);
 
-                    return isSuccessful;
-                }, castFlag: castFlag);
+                        return isSuccessful;
+                    },
+                castFlag: castFlag);
         }
-
-        ////[Fact]
-        ////public void ShouldIsCastableTo()
-        ////{
-        ////    CastTestRunner.RunTests((from, to) => from.IsCastableTo(to), castFlag: false);
-        ////}
 
         [Fact]
         public void ShouldRunAllExplicitCasts()
@@ -70,42 +53,22 @@ namespace TypeConverter.Tests
             TypeHelper.IsCacheEnabled = false;
             CastTestRunner.CastFlag castFlag = CastTestRunner.CastFlag.Explicit;
 
-            CastTestRunner.RunTests((testCase) =>
-                {
-                    // Arrange
-                    var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
-                    var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
+            CastTestRunner.RunTests(
+                (testCase) =>
+                    {
+                        // Arrange
+                        var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
+                        var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
 
-                    // Act
-                    var castResult = TypeHelper.CastTo(value, testCase.TargetType);
+                        // Act
+                        var castResult = TypeHelper.CastTo(value, testCase.TargetType);
 
-                    // Assert
-                    var isSuccessful = CastTestRunner.AreEqual(
-                        this.testOutputHelper, 
-                        testCase.SourceType, 
-                        testCase.TargetType,
-                        generatedTestSuccessful, 
-                        castResult, 
-                        castFlag);
+                        // Assert
+                        var isSuccessful = CastTestRunner.AreEqual(this.testOutputHelper, testCase.SourceType, testCase.TargetType, generatedTestSuccessful, castResult, castFlag);
 
-                    return isSuccessful;
-                }, castFlag: castFlag);
-        }
-
-        [Fact]
-        public void FactMethodName()
-        {
-            // Arrange
-            Operators2 o1 = new Operators2();
-            Operators2 o2 = new Operators2();
-
-            // Act
-            var objectEquals = Equals(o1, o2);
-            var operatorsEquals = o1.Equals(o2);
-
-            // Assert
-            objectEquals.Should().BeTrue();
-            operatorsEquals.Should().BeTrue();
+                        return isSuccessful;
+                    },
+                castFlag: castFlag);
         }
 
         [Fact]
@@ -139,6 +102,22 @@ namespace TypeConverter.Tests
 
             // Assert
             castedValue.IsSuccessful.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ShouldEqualOperators2Instances()
+        {
+            // Arrange
+            Operators2 o1 = new Operators2();
+            Operators2 o2 = new Operators2();
+
+            // Act
+            var objectEquals = Equals(o1, o2);
+            var operatorsEquals = o1.Equals(o2);
+
+            // Assert
+            objectEquals.Should().BeTrue();
+            operatorsEquals.Should().BeTrue();
         }
     }
 }

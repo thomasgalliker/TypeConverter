@@ -17,20 +17,6 @@ namespace TypeConverter.Utils
 {
     internal static class TypeHelper
     {
-        internal static bool CanCastTo(object value, Type targetType)
-        {
-            try
-            {
-                var castResult = CastTo(value, targetType);
-                return castResult.IsSuccessful;
-            }
-            catch
-            {
-            }
-
-            return false;
-        }
-
         internal static CastResult CastTo(object value, Type targetType)
         {
             if (value == null)
@@ -59,7 +45,6 @@ namespace TypeConverter.Utils
                     return new CastResult(value);
                 }
                 return new CastResult(ConversionNotSupportedException.Create(sourceType, targetType, value));
-                ;
             }
 
             // for nullable types, we can simply strip off the nullability and evaluate the underyling types
@@ -97,8 +82,10 @@ namespace TypeConverter.Utils
                             {
                                 break;
                             }
-
-                            castResult = null;
+                            else
+                            {
+                                castResult = null; 
+                            }
                         }
                         catch
                         {
@@ -112,7 +99,13 @@ namespace TypeConverter.Utils
                 castResult = new CastResult(ConversionNotSupportedException.Create(sourceType, targetType, value, ex.InnerException));
             }
 
-            CastCache.UpdateCache(key, castResult != null && castResult.IsSuccessful);
+            if (castResult == null)
+            {
+                castResult = new CastResult(ConversionNotSupportedException.Create(sourceType, targetType, value));
+            }
+
+            CastCache.UpdateCache(key, castResult.IsSuccessful);
+
             return castResult;
         }
 
