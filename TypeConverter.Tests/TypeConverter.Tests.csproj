@@ -96,7 +96,10 @@
     <Compile Include="Stubs\MyEnum.cs" />
     <Compile Include="Stubs\MyEnumConverter.cs" />
     <Compile Include="Stubs\TestStruct1.cs" />
-    <Compile Include="Utils\CompilerConversionTestCase.cs" />
+    <Compile Include="Utils\CastTestRunner.cs" />
+    <Compile Include="Utils\CompilerConversionTestCase.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\TypeConverter\TypeConverterKey.snk">

@@ -1,23 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using FluentAssertions;
 
 using TypeConverter.Converters;
 using TypeConverter.Exceptions;
 using TypeConverter.Tests.Stubs;
+using TypeConverter.Tests.Utils;
 using TypeConverter.Utils;
 
 using Xunit;
+using Xunit.Abstractions;
 
 namespace TypeConverter.Tests
 {
     public class ConverterRegistryTests
     {
-        public ConverterRegistryTests()
+        private readonly ITestOutputHelper testOutputHelper;
+
+        public ConverterRegistryTests(ITestOutputHelper testOutputHelper)
         {
+            this.testOutputHelper = testOutputHelper;
             TypeHelper.IsCacheEnabled = false;
         }
+
+        #region IConverter Tests
 
         [Fact]
         public void ShouldThrowConversionNotSupportedExceptionWhenTryingToConvertWithoutValidRegistration()
@@ -159,6 +167,166 @@ namespace TypeConverter.Tests
             convertedObject.Should().Be(Guid.Empty);
         }
 
+        #endregion
+
+        #region Implicit and explicit cast tests
+
+        [Fact]
+        public void ShouldConvertIfSourceTypeIsEqualToTargetType()
+        {
+            // Arrange
+            const string InputString = "999";
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedObject = (string)converterRegistry.Convert(typeof(string), typeof(string), InputString);
+
+            // Assert
+            convertedObject.Should().Be(InputString);
+        }
+
+        [Fact]
+        public void ShouldConvertIfTargetTypeIsAssignableFromSourceType()
+        {
+            // Arrange
+            List<string> stringList = new List<string> { "a", "b", "c" };
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedList = (IEnumerable<string>)converterRegistry.Convert(typeof(IEnumerable<string>), stringList);
+
+            // Assert
+            convertedList.Should().BeEquivalentTo(stringList);
+        }
+
+        [Fact]
+        public void ShouldConvertNullableTypeToValueType()
+        {
+            // Arrange
+            bool? nullableValue = true;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var valueType = converterRegistry.Convert<bool>(nullableValue);
+
+            // Assert
+            valueType.Should().Be(nullableValue.Value);
+        }
+
+        [Fact]
+        public void ShouldConvertValueTypeToNullableType()
+        {
+            // Arrange
+            bool valueType = true;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var nullableValue = converterRegistry.Convert<bool?>(valueType);
+
+            // Assert
+            nullableValue.Should().Be(valueType);
+        }
+
+        [Fact]
+        public void ShouldConvertDoubleToIntegerExplicitly()
+        {
+            // Arrange
+            double doubleValue = 999.99d;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedValue = converterRegistry.Convert<int>(doubleValue);
+
+            // Assert
+            convertedValue.Should().Be((int)doubleValue);
+        }
+
+        [Fact]
+        public void ShouldConvertULongToDecimalImplicitly()
+        {
+            // Arrange
+            ulong ulongValue = 999UL;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedValue = converterRegistry.Convert<decimal>(ulongValue);
+
+            // Assert
+            convertedValue.Should().Be(Convert.ToDecimal(ulongValue));
+        }
+
+        [Fact]
+        public void ShouldRunAllImplicitCasts()
+        {
+            CastTestRunner.CastFlag castFlag = CastTestRunner.CastFlag.Implicit;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            CastTestRunner.RunTests((testCase) =>
+            {
+                // Arrange
+                var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
+                var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
+
+                // Act
+                var convertedObject = converterRegistry.TryConvert(testCase.SourceType, testCase.TargetType, value);
+
+                // Assert
+                var castResult = new CastResult(convertedObject);
+                var isSuccessful = CastTestRunner.AreEqual(
+                       this.testOutputHelper,
+                       testCase.SourceType,
+                       testCase.TargetType,
+                       generatedTestSuccessful,
+                       castResult,
+                       castFlag);
+
+                if (isSuccessful == false)
+                {
+                    Debugger.Launch();
+                }
+
+                return isSuccessful;
+            }, castFlag: castFlag);
+        }
+
+        [Fact]
+        public void ShouldConvertDerivedOperators()
+        {
+            // Arrange
+            CastTestRunner.CastFlag castFlag = CastTestRunner.CastFlag.Implicit;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            var testCase = new CompilerConversionTestCase(typeof(DerivedOperators), typeof(Operators2), "", null);
+            //var testCase = new CompilerConversionTestCase(typeof(Operators), typeof(decimal), "", null);
+            var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
+            var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
+
+            // Act
+            var convertedObject = converterRegistry.TryConvert(testCase.SourceType, testCase.TargetType, value);
+
+            // Assert
+            var castResult = new CastResult(convertedObject);
+            var isSuccessful = CastTestRunner.AreEqual(
+                   this.testOutputHelper,
+                   testCase.SourceType,
+                   testCase.TargetType,
+                   generatedTestSuccessful,
+                   castResult,
+                   castFlag);
+
+            isSuccessful.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ShouldRunAllExplicitCasts()
+        {
+            //TODO
+        }
+
+        #endregion
+
+        #region Enum Parse Tests
+
         [Fact]
         public void ShouldConvertEnumsImplicitly()
         {
@@ -221,8 +389,11 @@ namespace TypeConverter.Tests
             outputString.Should().Be(inputString);
         }
 
+        #endregion
+
+        #region String Parse Tests
         [Fact]
-        public void ShouldConvertUsingGenericParseMethod()
+        public void ShouldConvertUsingGenericStringParseMethod()
         {
             // Arrange
             const string InputString = "999";
@@ -238,94 +409,9 @@ namespace TypeConverter.Tests
             outputString.Should().NotBeNull();
             outputString.Should().Be(InputString);
         }
+        #endregion
 
-        [Fact]
-        public void ShouldConvertIfSourceTypeIsEqualToTargetType()
-        {
-            // Arrange
-            const string InputString = "999";
-            IConverterRegistry converterRegistry = new ConverterRegistry();
-
-            // Act
-            var convertedObject = (string)converterRegistry.Convert(typeof(string), typeof(string), InputString);
-
-            // Assert
-            convertedObject.Should().Be(InputString);
-        }
-
-        [Fact]
-        public void ShouldConvertIfTargetTypeIsAssignableFromSourceType()
-        {
-            // Arrange
-            List<string> stringList = new List<string> { "a", "b", "c" };
-            IConverterRegistry converterRegistry = new ConverterRegistry();
-
-            // Act
-            var convertedList = (IEnumerable<string>)converterRegistry.Convert(typeof(IEnumerable<string>), stringList);
-
-            // Assert
-            convertedList.Should().BeEquivalentTo(stringList);
-        }
-
-        [Fact]
-        public void ShouldConvertNullableTypeToValueType()
-        {
-            // Arrange
-            bool? nullableValue = true;
-            IConverterRegistry converterRegistry = new ConverterRegistry();
-
-            // Act
-            var valueType = converterRegistry.Convert<bool>(nullableValue);
-
-            // Assert
-            valueType.Should().Be(nullableValue.Value);
-        }
-
-        [Fact]
-        public void ShouldConvertValueTypeToNullableType()
-        {
-            // Arrange
-            bool valueType = true;
-            IConverterRegistry converterRegistry = new ConverterRegistry();
-
-            // Act
-            var nullableValue = converterRegistry.Convert<bool?>(valueType);
-
-            // Assert
-            nullableValue.Should().Be(valueType);
-        }
-
-        // Implicit Numeric Conversions Table (C# Reference)
-        // https://msdn.microsoft.com/en-us/library/y5b434w4.aspx
-
-        [Fact]
-        public void ShouldConvertDoubleToIntegerExplicitly()
-        {
-            // Arrange
-            double doubleValue = 999.99d;
-            IConverterRegistry converterRegistry = new ConverterRegistry();
-
-            // Act
-            var convertedValue = converterRegistry.Convert<int>(doubleValue);
-
-            // Assert
-            convertedValue.Should().Be((int)doubleValue);
-        }
-
-        [Fact]
-        public void ShouldConvertULongToDecimalImplicitly()
-        {
-            // Arrange
-            ulong ulongValue = 999UL;
-            IConverterRegistry converterRegistry = new ConverterRegistry();
-
-            // Act
-            var convertedValue = converterRegistry.Convert<decimal>(ulongValue);
-
-            // Assert
-            convertedValue.Should().Be(Convert.ToDecimal(ulongValue));
-        }
-
+        #region General Tests
         [Fact]
         public void ShouldResetRegistrations()
         {
@@ -344,5 +430,6 @@ namespace TypeConverter.Tests
             var converterForTypeUriToString = converterRegistry.GetConverterForType<Uri, string>();
             converterForTypeUriToString.Should().BeNull();
         }
+        #endregion
     }
 }
