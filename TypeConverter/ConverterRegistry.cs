@@ -93,7 +93,13 @@ namespace TypeConverter
         }
 
         /// <inheritdoc />
-        public object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue = null)
+        public object TryConvert<TSource>(Type targetType, TSource value)
+        {
+            return this.TryConvert(targetType, value, null);
+        }
+
+        /// <inheritdoc />
+        public object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue)
         {
             return this.DoConvert(typeof(TSource), targetType, value, defaultReturnValue, throwIfConvertFails: false);
         }
@@ -105,50 +111,53 @@ namespace TypeConverter
         }
 
         /// <inheritdoc />
-        public object TryConvert(Type sourceType, Type targetType, object value, object defaultReturnValue = null)
+        public object TryConvert(Type sourceType, Type targetType, object value)
+        {
+            return this.TryConvert(sourceType, targetType, value, null);
+        }
+
+        /// <inheritdoc />
+        public object TryConvert(Type sourceType, Type targetType, object value, object defaultReturnValue)
         {
             return this.DoConvert(sourceType, targetType, value, defaultReturnValue, throwIfConvertFails: false);
         }
 
         private object DoConvert(Type sourceType, Type targetType, object value, object defaultReturnValue = null, bool throwIfConvertFails = true)
         {
-            if (value == null)
-            {
-                if (throwIfConvertFails)
-                {
-                    return defaultReturnValue;
-                }
-
-                throw new ArgumentNullException("value");
-            }
-
+            Guard.ArgumentNotNull(() => value);
             Guard.ArgumentNotNull(() => sourceType);
             Guard.ArgumentNotNull(() => targetType);
 
             // Attempt 1: Try to convert using registered converter
             // Having TryConvertGenericallyUsingConverterStrategy as a first attempt, the user of this library has the chance
-            // to influence the conversion process at first place.
+            // to influence the conversion process with first priority.
             var convertedValue = this.TryConvertGenericallyUsingConverterStrategy(sourceType, targetType, value);
             if (convertedValue != null)
             {
                 return convertedValue;
             }
 
-            // Attempt 2: Use implicit or explicit casting if supported
+            // Attempt 2: Is source type same as target type
+            if (sourceType == targetType)
+            {
+                return value;
+            }
+
+            // Attempt 3: Use implicit or explicit casting if supported
             var castedValue = TypeHelper.CastTo(value, targetType);
             if (castedValue != null && castedValue.IsSuccessful)
             {
                 return castedValue.Value;
             }
 
-            // Attempt 3: Try to convert generic enum
+            // Attempt 4: Try to convert generic enum
             var convertedEnum = this.TryConvertEnumGenerically(sourceType, targetType, value);
             if (convertedEnum != null)
             {
                 return convertedEnum;
             }
             
-            // Attempt 45: We essentially make a guess that to convert from a string
+            // Attempt 5: We essentially make a guess that to convert from a string
             // to an arbitrary type T there will be a static method defined on type T called Parse
             // that will take an argument of type string. i.e. T.Parse(string)->T we call this
             // method to convert the string to the type required by the property.
@@ -163,6 +172,10 @@ namespace TypeConverter
             {
                 throw ConversionNotSupportedException.Create(sourceType, targetType, value);
             }
+            ////if (defaultReturnValue == null && targetType.GetTypeInfo().IsValueType)
+            ////{
+            ////    return 
+            ////}
 
             return defaultReturnValue;
         }

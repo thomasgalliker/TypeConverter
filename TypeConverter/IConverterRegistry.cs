@@ -53,6 +53,7 @@ namespace TypeConverter
         ///     Converts the given value into an object of type TTarget.
         /// </summary>
         /// <param name="targetType">The target type.</param>
+        /// <typeparam name="TSource">Generic source type.</typeparam>
         /// <param name="value">The source value to be converted.</param>
         object Convert<TSource>(Type targetType, TSource value);
 
@@ -64,20 +65,59 @@ namespace TypeConverter
         /// <param name="value">The source value to be converted.</param>
         object Convert(Type sourceType, Type targetType, object value);
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Tries to convert the given value into an object of type TTarget.
+        /// </summary>
+        /// <typeparam name="TTarget">Generic target type.</typeparam>
+        /// <param name="value">The source value to be converted.</param>
+        /// <param name="defaultReturnValue">The default return value if the conversion failed.</param>
         TTarget TryConvert<TTarget>(object value, TTarget defaultReturnValue = default(TTarget));
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Tries to convert the given value into an object of type TTarget.
+        /// </summary>
+        /// <typeparam name="TSource">Generic source type.</typeparam>
+        /// <typeparam name="TTarget">Generic target type.</typeparam>
+        /// <param name="value">The source value to be converted.</param>
+        /// <param name="defaultReturnValue">The default return value if the conversion failed.</param>
         TTarget TryConvert<TSource, TTarget>(TSource value, TTarget defaultReturnValue = default(TTarget));
 
-        /// <inheritdoc />
-        object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue = null);
-
-        /// <inheritdoc />
-        object TryConvert(Type sourceType, Type targetType, object value, object defaultReturnValue = null);
+        /// <summary>
+        ///     Tries to convert the given value into an object of type TTarget.
+        /// </summary>
+        /// <typeparam name="TSource">Generic source type.</typeparam>
+        /// <param name="value">The source value to be converted.</param>
+        object TryConvert<TSource>(Type targetType, TSource value);
 
         /// <summary>
-        ///     Resets all registrations.
+        ///     Tries to convert the given value into an object of type TTarget.
+        /// </summary>
+        /// <typeparam name="TSource">Generic source type.</typeparam>
+        /// <param name="targetType">The target type.</param>
+        /// <param name="value">The source value to be converted.</param>
+        /// <param name="defaultReturnValue">The default return value if the conversion failed.</param>
+        object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue);
+
+        /// <summary>
+        ///     Tries to convert the given value into an object of type TTarget.
+        /// </summary>
+        /// <param name="sourceType">The source type.</param>
+        /// <param name="targetType">The target type.</param>
+        /// <param name="value">The source value to be converted.</param>
+        object TryConvert(Type sourceType, Type targetType, object value);
+
+        /// <summary>
+        ///     Tries to convert the given value into an object of type TTarget.
+        /// </summary>
+        /// <param name="sourceType">The source type.</param>
+        /// <param name="targetType">The target type.</param>
+        /// <param name="value">The source value to be converted.</param>
+        /// <param name="defaultReturnValue">The default return value if the conversion failed.</param>
+        object TryConvert(Type sourceType, Type targetType, object value, object defaultReturnValue);
+
+        /// <summary>
+        ///     Clears all registered IConverters
+        ///     and purges the cache.
         /// </summary>
         void Reset();
     }

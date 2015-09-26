@@ -11,12 +11,12 @@ namespace TypeConverter.Tests.Stubs
 
         public static implicit operator int(Operators o)
         {
-            return 1;
+            return 2;
         }
 
         public static explicit operator decimal?(Operators o)
         {
-            return 1.0m;
+            return 3.456m;
         }
 
         public static explicit operator StringSplitOptions(Operators o)

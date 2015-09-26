@@ -11,12 +11,12 @@ namespace TypeConverter.Tests.Stubs
 
         public static explicit operator Byte(DerivedOperators o)
         {
-            return new byte();
+            return (byte)0x08;
         }
 
         public static explicit operator Char(DerivedOperators o)
         {
-            return new char();
+            return 'X';
         }
     }
 }

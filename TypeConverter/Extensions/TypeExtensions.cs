@@ -33,7 +33,9 @@ namespace TypeConverter.Extensions
             }
 
             var typeInfo = type.GetTypeInfo();
-            methods.AddRange(typeInfo.DeclaredMethods);
+            var temp = methods.ToList();
+            methods = new List<MethodInfo>(typeInfo.DeclaredMethods);
+            methods.AddRange(temp);
 
             return GetDeclaredMethodsRecursively(typeInfo.BaseType, methods);
         }
