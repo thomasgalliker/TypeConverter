@@ -378,6 +378,7 @@ namespace TypeConverter.Tests.Utils
                         targetType.GetFormattedName());
                 }
 
+                // TODO GATH: REMOVE?
                 if (castFlag == CastFlag.Implicit)
                 {
                     return areEqual;
