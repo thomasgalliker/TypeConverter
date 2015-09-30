@@ -1,6 +1,6 @@
 ﻿namespace TypeConverter.Converters
 {
-    public class StringToIntegerConverter : IConverter<string, int>, IConverter<int, string>
+    public class StringToIntegerConverter : IConvertable<string, int>, IConvertable<int, string>
     {
         public int Convert(string value)
         {

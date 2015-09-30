@@ -2,7 +2,7 @@
 
 namespace TypeConverter.Converters
 {
-    public class StringToUriConverter : IConverter<string, Uri>, IConverter<Uri, string>
+    public class StringToUriConverter : IConvertable<string, Uri>, IConvertable<Uri, string>
     {
         public Uri Convert(string value)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -21,7 +22,7 @@ namespace TypeConverter.Utils
         {
             if (value == null)
             {
-                return new CastResult((object)null);
+                return new CastResult((object)null, CastFlag.Undefined);
             }
 
             Guard.ArgumentNotNull(() => targetType);
@@ -30,47 +31,60 @@ namespace TypeConverter.Utils
             var sourceTypeInfo = value.GetType().GetTypeInfo();
             var targetTypeInfo = targetType.GetTypeInfo();
 
-            // explicit conversion always works if to : from OR if there's an implicit conversion
-            if (targetTypeInfo.IsAssignableFrom(sourceTypeInfo))
+            if (targetTypeInfo.IsGenericType && !targetTypeInfo.GenericTypeArguments.Any())
             {
-                return CastImplicitlyTo(value, targetType);
+                return
+                    new CastResult(
+                        ConversionNotSupportedException.Create(
+                            sourceType,
+                            targetType,
+                            string.Format("The target type {0} does not have sufficient generic type arguments specified.", targetType.GetFormattedName())),
+                        CastFlag.Undefined);
             }
 
             var key = new KeyValuePair<Type, Type>(sourceType, targetType);
-            bool cachedValue;
+            Tuple<bool, CastFlag> cachedValue;
             if (CastCache.TryGetCachedValue(key, out cachedValue))
             {
-                if (cachedValue)
+                if (cachedValue.Item1)
                 {
-                    return new CastResult(value);
+                    return new CastResult(value, cachedValue.Item2);
                 }
-                return new CastResult(ConversionNotSupportedException.Create(sourceType, targetType, value));
-            }
-
-            // for nullable types, we can simply strip off the nullability and evaluate the underyling types
-            var underlyingTo = Nullable.GetUnderlyingType(targetType);
-            if (underlyingTo != null)
-            {
-                return CastTo(value, (underlyingTo));
+                return new CastResult(ConversionNotSupportedException.Create(sourceType, targetType), CastFlag.Undefined);
             }
 
             CastResult castResult = null;
+            CastFlag castFlag = CastFlag.Undefined;
 
             try
             {
-                if (sourceTypeInfo.IsValueType)
+                // explicit conversion always works if to : from OR if there's an implicit conversion
+                if (targetType.IsSameOrParent(sourceType))
                 {
-                    var castedValue = GenericCast(value, sourceType, targetType, isImplicit: false);
-                    castResult = new CastResult(castedValue);
+                    castFlag = CastFlag.Implicit;
+                    var castedValue = GenericCast(() => AttemptImplicitCast<object, object>(null), sourceType, targetType, value);
+                    castResult = new CastResult(castedValue, castFlag);
+                }
+                // for nullable types, we can simply strip off the nullability and evaluate the underyling types
+                else if (Nullable.GetUnderlyingType(targetType) != null)
+                {
+                    castResult = CastTo(value, Nullable.GetUnderlyingType(targetType));
+                }
+                else if (sourceTypeInfo.IsValueType)
+                {
+                    castFlag = CastFlag.Explicit;
+                    var castedValue = GenericCast(() => AttemptExplicitCast<object, object>(null), sourceType, targetType, value);
+                    castResult = new CastResult(castedValue, castFlag);
                 }
                 else
                 {
                     // Implicit cast operators have priority in favour of explicit operators
                     // since they should not lose precision. See C# language specification: 
                     // https://msdn.microsoft.com/en-us/library/z5z9kes2.aspx
-                    var conversionMethods = GetCastOperatorMethods(sourceType, targetType)
-                        .OrderByDescending(m => m.Name == "op_Implicit")
-                        .ThenByDescending(m => m.ReturnType == targetType || m.ReturnType.GetTypeInfo().IsAssignableFrom(targetTypeInfo));
+                    var conversionMethods =
+                        GetCastOperatorMethods(sourceType, targetType)
+                            .OrderByDescending(m => m.Name == "op_Implicit")
+                            .ThenByDescending(m => m.ReturnType == targetType || m.ReturnType.GetTypeInfo().IsAssignableFrom(targetTypeInfo));
 
                     foreach (var conversionMethod in conversionMethods)
                     {
@@ -84,7 +98,7 @@ namespace TypeConverter.Utils
                             }
                             else
                             {
-                                castResult = null; 
+                                castResult = null;
                             }
                         }
                         catch
@@ -92,25 +106,24 @@ namespace TypeConverter.Utils
                         }
                     }
                 }
-
             }
             catch (Exception ex)
             {
-                castResult = new CastResult(ConversionNotSupportedException.Create(sourceType, targetType, value, ex.InnerException));
+                castResult = new CastResult(ConversionNotSupportedException.Create(sourceType, targetType, ex.InnerException), castFlag);
             }
 
             if (castResult == null)
             {
-                castResult = new CastResult(ConversionNotSupportedException.Create(sourceType, targetType, value));
+                castResult = new CastResult(ConversionNotSupportedException.Create(sourceType, targetType), castFlag);
             }
 
-            CastCache.UpdateCache(key, castResult.IsSuccessful);
+            CastCache.UpdateCache(key, new Tuple<bool, CastFlag>(castResult.IsSuccessful, castResult.CastFlag));
 
             return castResult;
         }
 
         /// <summary>
-        /// This methods returns a list of cast operation methods (implicit as well as explicit operators).
+        ///     This methods returns a list of cast operation methods (implicit as well as explicit operators).
         /// </summary>
         private static IEnumerable<MethodInfo> GetCastOperatorMethods(Type sourceType, Type targetType)
         {
@@ -123,9 +136,8 @@ namespace TypeConverter.Utils
                 {
                     var parameters = mi.GetParameters();
 
-                    if (parameters.Length == 1 &&
-                        (parameters[0].ParameterType.GetTypeInfo().IsAssignableFrom(sourceType.GetTypeInfo()) ||
-                         sourceType.GetTypeInfo().IsAssignableFrom(parameters[0].ParameterType.GetTypeInfo())))
+                    if (parameters.Length == 1
+                        && (parameters[0].ParameterType.GetTypeInfo().IsAssignableFrom(sourceType.GetTypeInfo()) || sourceType.GetTypeInfo().IsAssignableFrom(parameters[0].ParameterType.GetTypeInfo())))
                     {
                         yield return mi;
                     }
@@ -133,74 +145,23 @@ namespace TypeConverter.Utils
             }
         }
 
-        internal static CastResult CastImplicitlyTo(object value, Type targetType)
+        private static object GenericCast<T>(Expression<Func<T>> expression, Type sourceType, Type targetType, object value)
         {
-            Guard.ArgumentNotNull(() => value);
-            Guard.ArgumentNotNull(() => targetType);
+            var genericCastMethodDefinition = ReflectionHelper.GetMethod(expression).GetGenericMethodDefinition();
+            var genericCastMethod = genericCastMethodDefinition.MakeGenericMethod(sourceType, targetType);
+            var castedValue = genericCastMethod.Invoke(null, new[] { value });
 
-            var sourceType = value.GetType();
-
-            var toTypeInfo = targetType.GetTypeInfo();
-            var fromTypeInfo = sourceType.GetTypeInfo();
-
-            // not strictly necessary, but speeds things up and avoids polluting the cache
-            if (toTypeInfo.IsAssignableFrom(fromTypeInfo))
-            {
-                return new CastResult(value);
-            }
-
-            var key = new KeyValuePair<Type, Type>(sourceType, targetType);
-            bool cachedValue;
-            if (ImplicitCastCache.TryGetCachedValue(key, out cachedValue))
-            {
-                if (cachedValue)
-                {
-                    return new CastResult(value);
-                }
-                return new CastResult(ConversionNotSupportedException.Create(sourceType, targetType, value));
-            }
-
-            CastResult castResult = null;
-            try
-            {
-                var castedValue = GenericCast(value, sourceType, targetType, isImplicit: true);
-                castResult = new CastResult(castedValue);
-            }
-            catch (TargetInvocationException ex)
-            {
-                castResult = new CastResult(ConversionNotSupportedException.Create(sourceType, targetType, value, ex.InnerException));
-            }
-
-            ImplicitCastCache.UpdateCache(key, castResult.IsSuccessful);
-            return castResult;
-        }
-
-        private static object GenericCast(object value, Type sourceType, Type targetType, bool isImplicit)
-        {
-            var genericCastMethod = ReflectionHelper.GetMethod(() => DoCast<object, object>(null, false)).GetGenericMethodDefinition();
-            var castedValue = genericCastMethod.MakeGenericMethod(sourceType, targetType).Invoke(null, new[] { value, isImplicit });
             return castedValue;
-        }
-
-        private static TTo DoCast<TFrom, TTo>(TFrom value, bool isImplicit)
-        {
-            // based on the IL generated from
-            //var x = (TTo)(dynamic)value;
-
-            var flags = isImplicit ? CSharpBinderFlags.None : CSharpBinderFlags.ConvertExplicit;
-            var binder = CSharpBinder.Convert(flags, typeof(TTo), typeof(TypeHelper));
-            var callSite = CallSite<Func<CallSite, TFrom, TTo>>.Create(binder);
-            //dynamic tDynCallSite = callSite;
-            return callSite.Target(callSite, value);
         }
 
         private static TTo AttemptExplicitCast<TFrom, TTo>(TFrom value)
         {
             // based on the IL generated from
-            // var x = (TTo)(dynamic)value;
+            //var x = (TTo)(dynamic)value;
 
             var binder = CSharpBinder.Convert(CSharpBinderFlags.ConvertExplicit, typeof(TTo), typeof(TypeHelper));
             var callSite = CallSite<Func<CallSite, TFrom, TTo>>.Create(binder);
+            //dynamic tDynCallSite = callSite;
             return callSite.Target(callSite, value);
         }
 
@@ -230,8 +191,7 @@ namespace TypeConverter.Utils
 
         public static bool IsCacheEnabled = true;
         private const int MaxCacheSize = 5000;
-        private static readonly Dictionary<KeyValuePair<Type, Type>, bool> CastCache = new Dictionary<KeyValuePair<Type, Type>, bool>();
-        private static readonly Dictionary<KeyValuePair<Type, Type>, bool> ImplicitCastCache = new Dictionary<KeyValuePair<Type, Type>, bool>();
+        private static readonly Dictionary<KeyValuePair<Type, Type>, Tuple<bool, CastFlag>> CastCache = new Dictionary<KeyValuePair<Type, Type>, Tuple<bool, CastFlag>>();
 
         private static readonly object SyncObj = new object();
 

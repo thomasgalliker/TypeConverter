@@ -46,9 +46,11 @@
     <Compile Include="Converters\StringToDoubleConverter.cs" />
     <Compile Include="Converters\StringToUriConverter.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="IConverter.cs" />
+    <Compile Include="Utils\CastFlag.cs" />
     <Compile Include="Utils\CastResult.cs" />
     <Compile Include="Utils\TypeHelper.cs" />
-    <Compile Include="IConverter.cs" />
+    <Compile Include="IConvertable.cs" />
     <Compile Include="Converters\StringToIntegerConverter.cs" />
     <Compile Include="Exceptions\ConversionNotSupportedException.cs" />
     <Compile Include="IConverterRegistry.cs" />

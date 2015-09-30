@@ -24,7 +24,7 @@ namespace TypeConverter.Tests
             TypeHelper.IsCacheEnabled = false;
         }
 
-        #region IConverter Tests
+        #region IConverable Tests
 
         [Fact]
         public void ShouldThrowConversionNotSupportedExceptionWhenTryingToConvertWithoutValidRegistration()
@@ -255,38 +255,31 @@ namespace TypeConverter.Tests
         }
 
         [Fact]
-        public void ShouldRunAllImplicitCasts()
+        public void ShouldRunAllDefaultCasts()
         {
-            CastTestRunner.CastFlag castFlag = CastTestRunner.CastFlag.Implicit;
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             CastTestRunner.RunTests((testCase) =>
             {
                 // Arrange
                 var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
-                var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
+                var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, testCase.CastFlag);
 
                 // Act
                 var convertedObject = converterRegistry.TryConvert(testCase.SourceType, testCase.TargetType, value);
 
                 // Assert
-                var castResult = new CastResult(convertedObject);
+                var castResult = new CastResult(convertedObject, testCase.CastFlag);
                 var isSuccessful = CastTestRunner.AreEqual(
                        this.testOutputHelper,
                        testCase.SourceType,
                        testCase.TargetType,
                        generatedTestSuccessful,
                        castResult,
-                       castFlag);
+                       testCase.CastFlag);
 
                 return isSuccessful;
-            }, castFlag: castFlag);
-        }
-
-        [Fact]
-        public void ShouldRunAllExplicitCasts()
-        {
-            //TODO
+            });
         }
 
         #endregion

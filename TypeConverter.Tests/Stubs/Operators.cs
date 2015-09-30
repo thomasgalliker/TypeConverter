@@ -2,7 +2,7 @@ using System;
 
 namespace TypeConverter.Tests.Stubs
 {
-    public class Operators
+    public class Operators : IOperators, IGenericOperators<string>
     {
         public static implicit operator string(Operators o)
         {
@@ -28,5 +28,22 @@ namespace TypeConverter.Tests.Stubs
         {
             return new Operators2();
         }
+
+        public string GenericProperty
+        {
+            get
+            {
+                return "GenericProperty";
+            }
+        }
+    }
+
+    public interface IOperators
+    {
+    }
+
+    public interface IGenericOperators<out T>
+    {
+        T GenericProperty { get; }
     }
 }

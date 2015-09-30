@@ -2,7 +2,7 @@
 
 namespace TypeConverter.Tests.Stubs
 {
-    public class MyEnumConverter : IConverter<string, MyEnum>, IConverter<MyEnum, string>
+    public class MyEnumConverter : IConvertable<string, MyEnum>, IConvertable<MyEnum, string>
     {
         public MyEnum Convert(string value)
         {

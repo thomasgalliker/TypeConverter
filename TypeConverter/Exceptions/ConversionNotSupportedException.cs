@@ -16,20 +16,32 @@ namespace TypeConverter.Exceptions
         {
         }
 
-        public static ConversionNotSupportedException Create(Type sourceType, Type targetType, object sourceValue, Exception innerException = null)
+        public static ConversionNotSupportedException Create(Type sourceType, Type targetType, Exception innerException = null)
         {
+            var convertableInterfaceType = typeof(IConvertable);
             string exceptionMessage =
                 string.Format(
-                    "Could not find IConverter<{0}, {1}> for source value of type {2}. " + "Use RegisterConverter method to register a converter which converts between type {0} and type {1}.",
+                    "Could not find {0}<{1}, {2}>. Use RegisterConverter method to register a converter which converts between type {1} and type {2}.",
+                    convertableInterfaceType.GetFormattedName(),
                     sourceType.GetFormattedName(),
-                    targetType.GetFormattedName(),
-                    sourceValue != null ? sourceValue.GetType().GetFormattedName() : "[null]");
+                    targetType.GetFormattedName());
 
             if (innerException == null)
             {
                 return new ConversionNotSupportedException(exceptionMessage);
             }
             return new ConversionNotSupportedException(exceptionMessage, innerException);
+        }
+
+        public static ConversionNotSupportedException Create(Type sourceType, Type targetType, string message)
+        {
+            string exceptionMessage =
+               string.Format(
+                   "Could not convert between type {0} and {1}. " + message,
+                   sourceType.GetFormattedName(),
+                   targetType.GetFormattedName());
+
+            return new ConversionNotSupportedException(exceptionMessage);
         }
     }
 }

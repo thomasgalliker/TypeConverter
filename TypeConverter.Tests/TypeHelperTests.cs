@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using FluentAssertions;
@@ -24,51 +25,35 @@ namespace TypeConverter.Tests
         }
 
         [Fact]
-        public void ShouldRunAllImplicitCasts()
+        public void ShouldRunAllCasts()
         {
             TypeHelper.IsCacheEnabled = false;
-            CastTestRunner.CastFlag castFlag = CastTestRunner.CastFlag.Implicit;
 
-            CastTestRunner.RunTests(
-                (testCase) =>
+            CastTestRunner.RunTests(testCase =>
+                {
+                    // Arrange
+                    var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
+                    var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, testCase.CastFlag);
+
+                    // Act
+                    var castResult = TypeHelper.CastTo(value, testCase.TargetType);
+
+                    // Assert
+                    var isSuccessful = CastTestRunner.AreEqual(
+                        this.testOutputHelper,
+                        testCase.SourceType,
+                        testCase.TargetType,
+                        generatedTestSuccessful,
+                        castResult, 
+                        testCase.CastFlag);
+
+                    if (!isSuccessful)
                     {
-                        // Arrange
-                        var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
-                        var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
+                        Debugger.Launch();
+                    }
 
-                        // Act
-                        var castResult = TypeHelper.CastImplicitlyTo(value, testCase.TargetType);
-
-                        // Assert
-                        var isSuccessful = CastTestRunner.AreEqual(this.testOutputHelper, testCase.SourceType, testCase.TargetType, generatedTestSuccessful, castResult, castFlag);
-
-                        return isSuccessful;
-                    },
-                castFlag: castFlag);
-        }
-
-        [Fact]
-        public void ShouldRunAllExplicitCasts()
-        {
-            TypeHelper.IsCacheEnabled = false;
-            CastTestRunner.CastFlag castFlag = CastTestRunner.CastFlag.Explicit;
-
-            CastTestRunner.RunTests(
-                (testCase) =>
-                    {
-                        // Arrange
-                        var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
-                        var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
-
-                        // Act
-                        var castResult = TypeHelper.CastTo(value, testCase.TargetType);
-
-                        // Assert
-                        var isSuccessful = CastTestRunner.AreEqual(this.testOutputHelper, testCase.SourceType, testCase.TargetType, generatedTestSuccessful, castResult, castFlag);
-
-                        return isSuccessful;
-                    },
-                castFlag: castFlag);
+                    return isSuccessful;
+                });
         }
 
         [Fact]
@@ -94,14 +79,65 @@ namespace TypeConverter.Tests
         public void ShouldSwollowInvalidProgramExceptionWhenNullableDecimalIsCastedToOperators2()
         {
             // Arrange
-            CastTestRunner.CastFlag castFlag = CastTestRunner.CastFlag.Explicit;
-            decimal? obj = 1234m;
+            var castFlag = CastFlag.Explicit;
+            decimal? value = 1234m;
 
             // Act
-            var castedValue = CastTestRunner.CastValueWithGeneratedCode(obj, typeof(Nullable<decimal>), typeof(Operators2), castFlag);
+            var castedValue = CastTestRunner.CastValueWithGeneratedCode(value, typeof(Nullable<decimal>), typeof(Operators2), castFlag);
 
             // Assert
             castedValue.IsSuccessful.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ShouldCastTypeWhichIsSubclassOfAnotherType()
+        {
+            // Arrange
+            var castFlag = CastFlag.Implicit;
+            var testCase = new CompilerConversionTestCase(typeof(DerivedOperators), typeof(Operators), castFlag);
+            var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
+            var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
+
+            // Act
+            var castResult = TypeHelper.CastTo(value, testCase.TargetType);
+
+            // Assert
+            var isSuccessful = CastTestRunner.AreEqual(this.testOutputHelper, testCase.SourceType, testCase.TargetType, generatedTestSuccessful, castResult, castFlag);
+            isSuccessful.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ShouldCastTypeWhichImplementsAGenericInterface()
+        {
+            // Arrange
+            var castFlag = CastFlag.Implicit;
+            var testCase = new CompilerConversionTestCase(typeof(Operators), typeof(IGenericOperators<string>), castFlag);
+            var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
+            var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
+
+            // Act
+            var castResult = TypeHelper.CastTo(value, testCase.TargetType);
+
+            // Assert
+            var isSuccessful = CastTestRunner.AreEqual(this.testOutputHelper, testCase.SourceType, testCase.TargetType, generatedTestSuccessful, castResult, castFlag);
+            isSuccessful.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ShouldNotCastTypeWhichImplementsAGenericInterfaceWithNoGenericTypeArgumentsDefined()
+        {
+            // Arrange
+            var castFlag = CastFlag.Implicit;
+            var testCase = new CompilerConversionTestCase(typeof(Operators), typeof(IGenericOperators<>), castFlag);
+            var value = CastTestRunner.GenerateValueForType(testCase.SourceType);
+            var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, castFlag);
+
+            // Act
+            var castResult = TypeHelper.CastTo(value, testCase.TargetType);
+
+            // Assert
+            var isSuccessful = CastTestRunner.AreEqual(this.testOutputHelper, testCase.SourceType, testCase.TargetType, generatedTestSuccessful, castResult, castFlag);
+            isSuccessful.Should().BeTrue();
         }
 
         [Fact]

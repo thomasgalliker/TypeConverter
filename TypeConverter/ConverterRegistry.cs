@@ -6,21 +6,22 @@ using System.Reflection;
 using Guards;
 
 using TypeConverter.Exceptions;
+using TypeConverter.Extensions;
 using TypeConverter.Utils;
 
 namespace TypeConverter
 {
     public class ConverterRegistry : IConverterRegistry
     {
-        private readonly Dictionary<Tuple<Type, Type>, Func<IConverter>> converters;
+        private readonly Dictionary<Tuple<Type, Type>, Func<IConvertable>> converters;
 
         public ConverterRegistry()
         {
-            this.converters = new Dictionary<Tuple<Type, Type>, Func<IConverter>>();
+            this.converters = new Dictionary<Tuple<Type, Type>, Func<IConvertable>>();
         }
 
         /// <inheritdoc />
-        public void RegisterConverter<TSource, TTarget>(Func<IConverter<TSource, TTarget>> converterFactory)
+        public void RegisterConverter<TSource, TTarget>(Func<IConvertable<TSource, TTarget>> converterFactory)
         {
             Guard.ArgumentNotNull(() => converterFactory);
 
@@ -36,26 +37,15 @@ namespace TypeConverter
             this.RegisterConverter(() => this.CreateConverterInstance<TSource, TTarget>(converterType));
         }
 
-        private IConverter<TSource, TTarget> CreateConverterInstance<TSource, TTarget>(Type converterType)
+        private IConvertable<TSource, TTarget> CreateConverterInstance<TSource, TTarget>(Type converterType)
         {
             Guard.ArgumentNotNull(() => converterType);
 
-            if (typeof(IConverter<TSource, TTarget>).GetTypeInfo().IsAssignableFrom(converterType.GetTypeInfo()))
+            if (typeof(IConvertable<TSource, TTarget>).GetTypeInfo().IsAssignableFrom(converterType.GetTypeInfo()))
             {
-                try
-                {
-                    return (IConverter<TSource, TTarget>)Activator.CreateInstance(converterType);
-                }
-                catch (Exception ex)
-                {
-                    ////LogLog.Error(DeclaringType, "Cannot CreateConverterInstance of type [" + converterType.FullName + "], Exception in call to Activator.CreateInstance", ex);
-                    throw;
-                }
+                return (IConvertable<TSource, TTarget>)Activator.CreateInstance(converterType);
             }
-            else
-            {
-                ////LogLog.Error(DeclaringType, "Cannot CreateConverterInstance of type [" + converterType.FullName + "], type does not implement ITypeConverter or IConvertTo");
-            }
+
             return null;
         }
 
@@ -64,32 +54,32 @@ namespace TypeConverter
         {
             Guard.ArgumentNotNull(() => value);
 
-            return (TTarget)this.DoConvert(value.GetType(), typeof(TTarget), value);
+            return (TTarget)this.ConvertInternal(value.GetType(), typeof(TTarget), value);
         }
 
         /// <inheritdoc />
         public TTarget TryConvert<TTarget>(object value, TTarget defaultReturnValue = default(TTarget))
         {
 
-            return (TTarget)this.DoConvert(value.GetType(), typeof(TTarget), value, defaultReturnValue, throwIfConvertFails: false);
+            return (TTarget)this.ConvertInternal(value.GetType(), typeof(TTarget), value, defaultReturnValue, throwIfConvertFails: false);
         }
 
         /// <inheritdoc />
         public TTarget Convert<TSource, TTarget>(TSource value)
         {
-            return (TTarget)this.DoConvert(typeof(TSource), typeof(TTarget), value);
+            return (TTarget)this.ConvertInternal(typeof(TSource), typeof(TTarget), value);
         }
 
         /// <inheritdoc />
         public TTarget TryConvert<TSource, TTarget>(TSource value, TTarget defaultReturnValue = default(TTarget))
         {
-            return (TTarget)this.DoConvert(typeof(TSource), typeof(TTarget), value, defaultReturnValue, throwIfConvertFails: false);
+            return (TTarget)this.ConvertInternal(typeof(TSource), typeof(TTarget), value, defaultReturnValue, throwIfConvertFails: false);
         }
 
         /// <inheritdoc />
         public object Convert<TSource>(Type targetType, TSource value)
         {
-            return this.DoConvert(typeof(TSource), targetType, value);
+            return this.ConvertInternal(typeof(TSource), targetType, value);
         }
 
         /// <inheritdoc />
@@ -101,13 +91,13 @@ namespace TypeConverter
         /// <inheritdoc />
         public object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue)
         {
-            return this.DoConvert(typeof(TSource), targetType, value, defaultReturnValue, throwIfConvertFails: false);
+            return this.ConvertInternal(typeof(TSource), targetType, value, defaultReturnValue, throwIfConvertFails: false);
         }
 
         /// <inheritdoc />
         public object Convert(Type sourceType, Type targetType, object value)
         {
-            return this.DoConvert(sourceType, targetType, value);
+            return this.ConvertInternal(sourceType, targetType, value);
         }
 
         /// <inheritdoc />
@@ -119,10 +109,10 @@ namespace TypeConverter
         /// <inheritdoc />
         public object TryConvert(Type sourceType, Type targetType, object value, object defaultReturnValue)
         {
-            return this.DoConvert(sourceType, targetType, value, defaultReturnValue, throwIfConvertFails: false);
+            return this.ConvertInternal(sourceType, targetType, value, defaultReturnValue, throwIfConvertFails: false);
         }
 
-        private object DoConvert(Type sourceType, Type targetType, object value, object defaultReturnValue = null, bool throwIfConvertFails = true)
+        private object ConvertInternal(Type sourceType, Type targetType, object value, object defaultReturnValue = null, bool throwIfConvertFails = true)
         {
             Guard.ArgumentNotNull(() => value);
             Guard.ArgumentNotNull(() => sourceType);
@@ -137,27 +127,21 @@ namespace TypeConverter
                 return convertedValue;
             }
 
-            // Attempt 2: Is source type same as target type
-            if (sourceType == targetType)
-            {
-                return value;
-            }
-
-            // Attempt 3: Use implicit or explicit casting if supported
+            // Attempt 2: Use implicit or explicit casting if supported
             var castedValue = TypeHelper.CastTo(value, targetType);
             if (castedValue != null && castedValue.IsSuccessful)
             {
                 return castedValue.Value;
             }
 
-            // Attempt 4: Try to convert generic enum
+            // Attempt 3: Try to convert generic enum
             var convertedEnum = this.TryConvertEnumGenerically(sourceType, targetType, value);
             if (convertedEnum != null)
             {
                 return convertedEnum;
             }
             
-            // Attempt 5: We essentially make a guess that to convert from a string
+            // Attempt 4: We essentially make a guess that to convert from a string
             // to an arbitrary type T there will be a static method defined on type T called Parse
             // that will take an argument of type string. i.e. T.Parse(string)->T we call this
             // method to convert the string to the type required by the property.
@@ -167,15 +151,17 @@ namespace TypeConverter
                 return parsedValue;
             }
 
-            // If all fails, we either throw an exception or return a default target value
+            // If all fails, we either throw an exception
             if (throwIfConvertFails)
             {
-                throw ConversionNotSupportedException.Create(sourceType, targetType, value);
+                throw ConversionNotSupportedException.Create(sourceType, targetType);
             }
-            ////if (defaultReturnValue == null && targetType.GetTypeInfo().IsValueType)
-            ////{
-            ////    return 
-            ////}
+
+            // ...or return a default target value
+            if (defaultReturnValue == null)
+            {
+                return targetType.GetDefault();
+            }
 
             return defaultReturnValue;
         }
@@ -204,7 +190,7 @@ namespace TypeConverter
         }
 
         /// <inheritdoc />
-        public IConverter<TSource, TTarget> GetConverterForType<TSource, TTarget>()
+        public IConvertable<TSource, TTarget> GetConverterForType<TSource, TTarget>()
         {
             lock (this.converters)
             {
@@ -212,7 +198,7 @@ namespace TypeConverter
                 if (this.converters.ContainsKey(key))
                 {
                     var converterFactory = this.converters[key];
-                    return (IConverter<TSource, TTarget>)converterFactory();
+                    return (IConvertable<TSource, TTarget>)converterFactory();
                 }
 
                 return null;

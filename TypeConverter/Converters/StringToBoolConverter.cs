@@ -1,6 +1,6 @@
 ﻿namespace TypeConverter.Converters
 {
-    public class StringToBoolConverter : IConverter<string, bool>, IConverter<bool, string>
+    public class StringToBoolConverter : IConvertable<string, bool>, IConvertable<bool, string>
     {
         public bool Convert(string value)
         {

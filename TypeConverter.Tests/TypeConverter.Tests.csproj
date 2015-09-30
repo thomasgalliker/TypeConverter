@@ -100,6 +100,7 @@
     <Compile Include="Utils\CompilerConversionTestCase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Utils\CompilerException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\TypeConverter\TypeConverterKey.snk">

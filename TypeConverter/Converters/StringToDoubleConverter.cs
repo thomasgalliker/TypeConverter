@@ -1,6 +1,6 @@
 ﻿namespace TypeConverter.Converters
 {
-    public class StringToDoubleConverter : IConverter<string, double>, IConverter<double, string>
+    public class StringToDoubleConverter : IConvertable<string, double>, IConvertable<double, string>
     {
         public double Convert(string value)
         {

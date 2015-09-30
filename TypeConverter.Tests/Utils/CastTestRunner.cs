@@ -17,22 +17,12 @@ namespace TypeConverter.Tests.Utils
 {
     internal class CastTestRunner
     {
-        internal enum CastFlag
-        {
-            Undefined = 0,
-            Implicit = 1,
-            Explicit = 2,
-        }
-
-        private class TestResult
-        {
-            
-        }
-
-        internal static void RunTests(Func<CompilerConversionTestCase, bool> runTestCase, CastFlag castFlag)
+        internal static void RunTests(Func<CompilerConversionTestCase, bool> runTestCase)
         {
             var allTypesToConsider = GetAllTestTypes();
-            var testCases = GenerateTestCases(allTypesToConsider, castFlag);
+            var testCasesImplicit = GenerateTestCases(allTypesToConsider, CastFlag.Implicit);
+            var testCasesExplicit = GenerateTestCases(allTypesToConsider, CastFlag.Explicit);
+            var testCases = testCasesImplicit.Concat(testCasesExplicit);
 
             var mistakes = new List<string>();
             foreach (var testCase in testCases.Where(tc => tc.IsCompilable))
@@ -44,7 +34,7 @@ namespace TypeConverter.Tests.Utils
                         string.Format("{0} => {1}: failed to {2} cast",
                         testCase.SourceType.GetFormattedName(),
                         testCase.TargetType.GetFormattedName(),
-                        castFlag == CastFlag.Explicit? "implicitly" : "explicitly"));
+                        testCase.CastFlag == CastFlag.Explicit ? "implicitly" : "explicitly"));
                 }
             }
             Assert.True(mistakes.Count == 0, string.Join(Environment.NewLine, new[] { mistakes.Count + " errors" }.Concat(mistakes)));
@@ -78,6 +68,9 @@ namespace TypeConverter.Tests.Utils
             var conversionOperators = new[]
             {
                 typeof(Operators), 
+                typeof(IOperators), 
+                typeof(IGenericOperators<>), 
+                typeof(IGenericOperators<string>), 
                 typeof(Operators2), 
                 typeof(DerivedOperators), 
                 typeof(OperatorsStruct)
@@ -123,7 +116,7 @@ namespace TypeConverter.Tests.Utils
             var testCases = typeCrossProduct.GroupJoin(compilationResult.Errors.Cast<CompilerError>(),
                 type => type.index,
                 e => e.Line - 2,
-                (type, errors) => new CompilerConversionTestCase(type.sourceType, type.targetType, type.codeline, errors.FirstOrDefault()))
+                (type, errors) => new CompilerConversionTestCase(type.sourceType, type.targetType, castFlag, type.codeline, errors.FirstOrDefault()))
                 .ToList();
 
             // add a special case
@@ -164,7 +157,13 @@ namespace TypeConverter.Tests.Utils
                 var compilationResult = provider.CompileAssemblyFromSource(compilerParams, code);
                 if (compilationResult.Errors.HasErrors)
                 {
-                    return new CastResult(compilationResult.Errors);
+
+                    var compilerException = new AggregateException("CastValueWithGeneratedCode failed to generate test class.",
+                                                  compilationResult.Errors 
+                                                      .OfType<CompilerError>() 
+                                                      .Where(e => !e.IsWarning)
+                                                      .Select(e => new CompilerException(e.Line, e.Column, e.ErrorText)));
+                    return new CastResult(compilerException, castFlag);
                 }
 
                 var generatedClass = compilationResult.CompiledAssembly.GetType(className);
@@ -175,7 +174,7 @@ namespace TypeConverter.Tests.Utils
                 try
                 {
                     var castedValue = testMethod.Invoke(instance, new[] { value });
-                    return new CastResult(castedValue);
+                    return new CastResult(castedValue, castFlag);
                 }
                 catch (TargetInvocationException ex)
                 {
@@ -183,14 +182,14 @@ namespace TypeConverter.Tests.Utils
                     {
                         // This is most probably an error in Roslyn compiler.
                         // See http://stackoverflow.com/questions/18342943/serious-bugs-with-lifted-nullable-conversions-from-int-allowing-conversion-from
-                        return new CastResult(value);
+                        return new CastResult(value, castFlag);
                     }
 
-                    return new CastResult(ex);
+                    return new CastResult(ex, castFlag);
                 }
                 catch (Exception ex)
                 {
-                    return new CastResult(ex);
+                    return new CastResult(ex, castFlag);
                 }
             }
         }
@@ -313,7 +312,7 @@ namespace TypeConverter.Tests.Utils
             {
                 return new OperatorsStruct();
             }
-            if (type == typeof(Operators))
+            if (type == typeof(Operators) || type == typeof(IOperators) || type == typeof(IGenericOperators<>) || type == typeof(IGenericOperators<string>))
             {
                 return new Operators();
             }
@@ -365,32 +364,39 @@ namespace TypeConverter.Tests.Utils
             throw new InvalidOperationException(string.Format("Could not generate an instance of type {0}. Please register.", type.GetFormattedName()));
         }
 
-        internal static bool AreEqual(ITestOutputHelper testOutputHelper, Type sourceType, Type targetType, CastResult compilerResult, CastResult castResult, CastFlag castFlag)
+        internal static bool AreEqual(ITestOutputHelper testOutputHelper, Type sourceType, Type targetType, CastResult compilerResult, CastResult castResult, CastFlag expectedCastFlag)
         {
-            if (compilerResult.IsSuccessful == castResult.IsSuccessful)
+            if (compilerResult.IsSuccessful == true && castResult.IsSuccessful == false)
             {
-                var areEqual = Equals(compilerResult.Value, castResult.Value);
-                if (!areEqual)
+                // Let's assert the details if the compiler generates a successful result
+                // but the CastTo method does not the same.
+
+                var castFlagsAreEqual = compilerResult.CastFlag == castResult.CastFlag || castResult.CastFlag == CastFlag.Implicit;
+                if (!castFlagsAreEqual)
                 {
-                    testOutputHelper.WriteLine("Result of {0} conversion between {1} and {2} are not equal.",
-                        castFlag == CastFlag.Implicit ? "implicit" : "explicit",
+                    testOutputHelper.WriteLine("CastFlags of conversion between {0} and {1} are not equal." + Environment.NewLine +
+                        "Expected CastFlag: {2}" + Environment.NewLine +
+                        "Resulted CastFlag: {3}" + Environment.NewLine,
                         sourceType.GetFormattedName(),
-                        targetType.GetFormattedName());
+                        targetType.GetFormattedName(),
+                        expectedCastFlag,
+                        castResult.CastFlag);
+                    return false;
                 }
 
-                // TODO GATH: REMOVE?
-                if (castFlag == CastFlag.Implicit)
+                var valuesAreNotEqual = compilerResult.CastFlag == castResult.CastFlag && !Equals(compilerResult.Value, castResult.Value);
+                if (valuesAreNotEqual)
                 {
-                    return areEqual;
-                }
-                else
-                {
-                    // For explicit casts we do not (yet) compare the compiler result with the cast result
-                    return true;
+                    testOutputHelper.WriteLine("Result of {0} conversion between {1} and {2} are not equal.",
+                        expectedCastFlag == CastFlag.Implicit ? "implicit" : "explicit",
+                        sourceType.GetFormattedName(),
+                        targetType.GetFormattedName());
+
+                    return false;
                 }
             }
 
-            return false;
+            return true;
         }
     }
 }
