@@ -22,7 +22,7 @@ namespace TypeConverter.Tests.Extensions
             var declaredMethods = type.GetDeclaredMethodsRecursively();
 
             // Assert
-            declaredMethods.Should().HaveCount(16);
+            declaredMethods.Should().HaveCount(17);
             declaredMethods.Count(x => x.Name == "op_Implicit").Should().Be(2);
             declaredMethods.Count(x => x.Name == "op_Explicit").Should().Be(3);
         }
@@ -37,7 +37,7 @@ namespace TypeConverter.Tests.Extensions
             var declaredMethods = type.GetDeclaredMethodsRecursively();
 
             // Assert
-            declaredMethods.Should().HaveCount(19);
+            declaredMethods.Should().HaveCount(20);
             declaredMethods.Count(x => x.Name == "op_Implicit").Should().Be(2);
             declaredMethods.Count(x => x.Name == "op_Explicit").Should().Be(6);
         }
@@ -52,9 +52,37 @@ namespace TypeConverter.Tests.Extensions
             var declaredMethods = typeInfo.GetDeclaredMethodsRecursively();
 
             // Assert
-            declaredMethods.Should().HaveCount(19);
+            declaredMethods.Should().HaveCount(20);
             declaredMethods.Count(x => x.Name == "op_Implicit").Should().Be(2);
             declaredMethods.Count(x => x.Name == "op_Explicit").Should().Be(6);
+        }
+
+        [Fact]
+        public void IsSameOrParentShouldDetectSameType()
+        {
+            // Arrange
+            var childTypeInfo = typeof(Operators).GetTypeInfo();
+            var parentTypeInfo = typeof(Operators).GetTypeInfo();
+
+            // Act
+            var isSameOrParent = parentTypeInfo.IsSameOrParent(childTypeInfo);
+
+            // Assert
+            isSameOrParent.Should().BeTrue();
+        }
+
+        [Fact]
+        public void IsSameOrParentShouldDetectParent()
+        {
+            // Arrange
+            var childTypeInfo = typeof(DerivedOperators).GetTypeInfo();
+            var parentTypeInfo = typeof(Operators).GetTypeInfo();
+
+            // Act
+            var isSameOrParent = parentTypeInfo.IsSameOrParent(childTypeInfo);
+
+            // Assert
+            isSameOrParent.Should().BeTrue();
         }
     }
 }

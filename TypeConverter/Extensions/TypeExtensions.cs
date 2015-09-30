@@ -40,35 +40,6 @@ namespace TypeConverter.Extensions
             return GetDeclaredMethodsRecursively(typeInfo.BaseType, methods);
         }
 
-
-        internal static IEnumerable<TypeInfo> GetInterfaces(this TypeInfo typeInfo)
-        {
-            if (typeInfo == null)
-            {
-                return null;
-            }
-
-            var interfaceTypes = GetInterfaces(typeInfo.AsType(), new List<TypeInfo>());
-            return interfaceTypes;
-        }
-
-
-        private static IEnumerable<TypeInfo> GetInterfaces(this Type type, List<TypeInfo> interfaceTypes)
-        {
-            if (type == null)
-            {
-                return interfaceTypes;
-            }
-
-            var typeInfo = type.GetTypeInfo();
-            var temp = interfaceTypes.ToList();
-            interfaceTypes = new List<TypeInfo>(typeInfo.ImplementedInterfaces.Select(t => t.GetTypeInfo()));
-            interfaceTypes.AddRange(temp);
-
-            return GetInterfaces(typeInfo.BaseType, interfaceTypes);
-        }
-
-
         /// <summary>
         ///     Determines whether the specified types are considered equal.
         /// </summary>
@@ -113,7 +84,7 @@ namespace TypeConverter.Extensions
 
             if (parentTypeInfo.IsInterface)
             {
-                var interfaces = childTypeInfo.GetInterfaces();
+                var interfaces = childTypeInfo.ImplementedInterfaces.Select(i => i.GetTypeInfo());
 
                 foreach (var t in interfaces)
                 {
