@@ -167,7 +167,7 @@ namespace TypeConverter.Tests
         }
 
         [Fact]
-        public void ShouldTryConvertEnumImplicitly()
+        public void ShouldTryConvertEnumImplicitlyWithGenericMethod()
         {
             // Arrange
             object sourceObject = MyEnum.TestValue;
@@ -180,6 +180,22 @@ namespace TypeConverter.Tests
             // Assert
             convertedObject.Should().Be(sourceObject);
         }
+
+        [Fact]
+        public void ShouldTryConvertEnumImplicitlyWithNonGenericMethod()
+        {
+            // Arrange
+            object sourceObject = MyEnum.TestValue;
+            const MyEnum DefaultValue = default(MyEnum);
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            object convertedObject = converterRegistry.TryConvert(typeof(object), typeof(MyEnum), sourceObject, DefaultValue);
+
+            // Assert
+            convertedObject.Should().Be(sourceObject);
+        }
+
         #endregion
 
         #region Implicit and explicit cast tests

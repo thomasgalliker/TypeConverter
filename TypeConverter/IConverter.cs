@@ -65,7 +65,7 @@ namespace TypeConverter
         /// <param name="targetType">The target type.</param>
         /// <param name="value">The source value to be converted.</param>
         /// <param name="defaultReturnValue">The default return value if the conversion failed.</param>
-        object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue = default(object));
+        object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue);
 
         /// <summary>
         ///     Tries to convert the given value into an object of type TTarget.
@@ -74,6 +74,6 @@ namespace TypeConverter
         /// <param name="targetType">The target type.</param>
         /// <param name="value">The source value to be converted.</param>
         /// <param name="defaultReturnValue">The default return value if the conversion failed.</param>
-        object TryConvert(Type sourceType, Type targetType, object value, object defaultReturnValue = default(object));
+        object TryConvert(Type sourceType, Type targetType, object value, object defaultReturnValue);
     }
 }
