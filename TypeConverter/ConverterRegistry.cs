@@ -201,7 +201,16 @@ namespace TypeConverter
 
             if (targetType.GetTypeInfo().IsEnum)
             {
-                return Enum.Parse(targetType, value.ToString(), true);
+                try
+                {
+                    return Enum.Parse(targetType, value.ToString(), true);
+                }
+                catch (ArgumentException)
+                {
+                    // Unfortunately, we cannot use Enum.TryParse in this case,
+                    // The only way to catch failing parses is this ugly try-catch
+                    return null;
+                }
             }
 
             return null;

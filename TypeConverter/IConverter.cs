@@ -11,14 +11,14 @@ namespace TypeConverter
     public interface IConverter
     {
         /// <summary>
-        ///     Converts the given value into an object of type TTarget.
+        ///     Converts the given <paramref name="value"/> into an object of type <typeparamref name="TTarget"/>.
         /// </summary>
         /// <typeparam name="TTarget">Generic target type.</typeparam>
         /// <param name="value">The source value to be converted.</param>
         TTarget Convert<TTarget>(object value);
 
         /// <summary>
-        ///     Converts the given value into an object of type TTarget.
+        ///     Converts the given <paramref name="value"/> into an object of type <typeparamref name="TTarget"/>.
         /// </summary>
         /// <typeparam name="TSource">Generic source type.</typeparam>
         /// <typeparam name="TTarget">Generic target type.</typeparam>
@@ -26,7 +26,7 @@ namespace TypeConverter
         TTarget Convert<TSource, TTarget>(TSource value);
 
         /// <summary>
-        ///     Converts the given value into an object of type TTarget.
+        ///     Converts the given <paramref name="value"/> into an object of type <paramref name="targetType"/>.
         /// </summary>
         /// <param name="targetType">The target type.</param>
         /// <typeparam name="TSource">Generic source type.</typeparam>
@@ -34,7 +34,7 @@ namespace TypeConverter
         object Convert<TSource>(Type targetType, TSource value);
 
         /// <summary>
-        ///     Converts the given value into an object of type TTarget.
+        ///     Converts the given <paramref name="value"/> into an object of type <paramref name="targetType"/>.
         /// </summary>
         /// <param name="sourceType">The source type.</param>
         /// <param name="targetType">The target type.</param>
@@ -42,24 +42,25 @@ namespace TypeConverter
         object Convert(Type sourceType, Type targetType, object value);
 
         /// <summary>
-        ///     Tries to convert the given value into an object of type TTarget.
+        ///     Tries to convert the given <paramref name="value"/> into an object of type <typeparamref name="TTarget"/>.
+        ///     If a conversion is not possible, it returns the given <paramref name="defaultReturnValue"/>.
         /// </summary>
         /// <typeparam name="TTarget">Generic target type.</typeparam>
         /// <param name="value">The source value to be converted.</param>
         /// <param name="defaultReturnValue">The default return value if the conversion failed.</param>
-        TTarget TryConvert<TTarget>(object value, TTarget defaultReturnValue = default(TTarget));
+        TTarget TryConvert<TTarget>(object value, TTarget defaultReturnValue);
 
         /// <summary>
-        ///     Tries to convert the given value into an object of type TTarget.
+        ///     Tries to convert the given <paramref name="value"/> into an object of type <typeparamref name="TTarget"/>.
         /// </summary>
         /// <typeparam name="TSource">Generic source type.</typeparam>
         /// <typeparam name="TTarget">Generic target type.</typeparam>
         /// <param name="value">The source value to be converted.</param>
         /// <param name="defaultReturnValue">The default return value if the conversion failed.</param>
-        TTarget TryConvert<TSource, TTarget>(TSource value, TTarget defaultReturnValue = default(TTarget));
+        TTarget TryConvert<TSource, TTarget>(TSource value, TTarget defaultReturnValue);
 
         /// <summary>
-        ///     Tries to convert the given value into an object of type TTarget.
+        ///     Tries to convert the given <paramref name="value"/> into an object of given <paramref name="targetType"/>.
         /// </summary>
         /// <typeparam name="TSource">Generic source type.</typeparam>
         /// <param name="targetType">The target type.</param>
@@ -68,7 +69,7 @@ namespace TypeConverter
         object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue);
 
         /// <summary>
-        ///     Tries to convert the given value into an object of type TTarget.
+        ///     Tries to convert the given <paramref name="value"/> into an object of given <paramref name="targetType"/>.
         /// </summary>
         /// <param name="sourceType">The source type.</param>
         /// <param name="targetType">The target type.</param>

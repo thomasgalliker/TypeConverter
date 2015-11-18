@@ -160,7 +160,7 @@ namespace TypeConverter.Tests
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             // Act
-            var convertedObject = converterRegistry.TryConvert<Guid>(testStruct1);
+            var convertedObject = converterRegistry.TryConvert<Guid>(testStruct1, default(Guid));
 
             // Assert
             convertedObject.Should().Be(Guid.Empty);
@@ -324,7 +324,11 @@ namespace TypeConverter.Tests
                 var generatedTestSuccessful = CastTestRunner.CastValueWithGeneratedCode(value, testCase.SourceType, testCase.TargetType, testCase.CastFlag);
 
                 // Act
-                var convertedObject = converterRegistry.TryConvert(testCase.SourceType, testCase.TargetType, value);
+                var convertedObject = converterRegistry.TryConvert(
+                    sourceType: testCase.SourceType, 
+                    targetType: testCase.TargetType, 
+                    value: value, 
+                    defaultReturnValue: null);
 
                 // Assert
                 var castResult = new CastResult(convertedObject, testCase.CastFlag);
