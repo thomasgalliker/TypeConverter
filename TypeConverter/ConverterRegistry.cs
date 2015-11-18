@@ -155,6 +155,12 @@ namespace TypeConverter
 
         private object TryConvertGenericallyUsingConverterStrategy(Type sourceType, Type targetType, object value)
         {
+            if (sourceType.GetTypeInfo().ContainsGenericParameters || targetType.GetTypeInfo().ContainsGenericParameters)
+            {
+                // Cannot deal with open generics, like IGenericOperators<>
+                return null;
+            }
+
             // Call generic method GetConverterForType to retrieve generic IConverter<TSource, TTarget>
             var getConverterForTypeMethod = ReflectionHelper.GetMethod(() => this.GetConverterForType<object, object>()).GetGenericMethodDefinition();
             var genericGetConverterForTypeMethod = getConverterForTypeMethod.MakeGenericMethod(sourceType, targetType);
@@ -224,7 +230,14 @@ namespace TypeConverter
                 var parseMethod = targetType.GetRuntimeMethod("Parse", new[] { sourceType });
                 if (parseMethod != null)
                 {
-                    return parseMethod.Invoke(this, new[] { value });
+                    try
+                    {
+                        return parseMethod.Invoke(this, new[] { value });
+                    }
+                    catch (Exception)
+                    {
+                        return null;
+                    }
                 }
             }
             else if (targetType == typeof(string) && sourceType != typeof(string))

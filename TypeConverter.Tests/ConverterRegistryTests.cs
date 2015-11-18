@@ -274,42 +274,70 @@ namespace TypeConverter.Tests
         public void ShouldConvertValueTypeToNullableType()
         {
             // Arrange
-            bool valueType = true;
+            const bool ValueType = true;
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             // Act
-            var nullableValue = converterRegistry.Convert<bool?>(valueType);
+            var nullableValue = converterRegistry.Convert<bool?>(ValueType);
 
             // Assert
-            nullableValue.Should().Be(valueType);
+            nullableValue.Should().Be(ValueType);
         }
 
         [Fact]
         public void ShouldConvertDoubleToIntegerExplicitly()
         {
             // Arrange
-            double doubleValue = 999.99d;
+            const double DoubleValue = 999.99d;
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             // Act
-            var convertedValue = converterRegistry.Convert<int>(doubleValue);
+            var convertedValue = converterRegistry.Convert<int>(DoubleValue);
 
             // Assert
-            convertedValue.Should().Be((int)doubleValue);
+            convertedValue.Should().Be((int)DoubleValue);
         }
 
         [Fact]
         public void ShouldConvertULongToDecimalImplicitly()
         {
             // Arrange
-            ulong ulongValue = 999UL;
+            const ulong UlongValue = 999UL;
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             // Act
-            var convertedValue = converterRegistry.Convert<decimal>(ulongValue);
+            var convertedValue = converterRegistry.Convert<decimal>(UlongValue);
 
             // Assert
-            convertedValue.Should().Be(Convert.ToDecimal(ulongValue));
+            convertedValue.Should().Be(Convert.ToDecimal(UlongValue));
+        }
+
+        [Fact]
+        public void ShouldConvertFromOpenGenericTypeToGenericType()
+        {
+            // Arrange
+            IGenericOperators<string> inputValue = new Operators();
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedValue = converterRegistry.Convert(typeof(IGenericOperators<>), typeof(IGenericOperators<string>), inputValue);
+
+            // Assert
+            convertedValue.Should().Be(inputValue);
+        }
+
+        [Fact]
+        public void ShouldThrowConversionNotSupportedExceptionWhenTryingToConvertToOpenGenericType()
+        {
+            // Arrange
+            IGenericOperators<string> value = new Operators();
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            Action action = () => converterRegistry.Convert(typeof(IGenericOperators<string>), typeof(IGenericOperators<>), value);
+
+            // Assert
+            Assert.Throws<ConversionNotSupportedException>(action);
         }
 
         [Fact]
