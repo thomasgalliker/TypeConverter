@@ -60,7 +60,6 @@ namespace TypeConverter
         /// <inheritdoc />
         public TTarget TryConvert<TTarget>(object value, TTarget defaultReturnValue = default(TTarget))
         {
-
             return (TTarget)this.ConvertInternal(value.GetType(), typeof(TTarget), value, defaultReturnValue, throwIfConvertFails: false);
         }
 
@@ -83,12 +82,6 @@ namespace TypeConverter
         }
 
         /// <inheritdoc />
-        public object TryConvert<TSource>(Type targetType, TSource value)
-        {
-            return this.TryConvert(targetType, value, null);
-        }
-
-        /// <inheritdoc />
         public object TryConvert<TSource>(Type targetType, TSource value, object defaultReturnValue)
         {
             return this.ConvertInternal(typeof(TSource), targetType, value, defaultReturnValue, throwIfConvertFails: false);
@@ -98,12 +91,6 @@ namespace TypeConverter
         public object Convert(Type sourceType, Type targetType, object value)
         {
             return this.ConvertInternal(sourceType, targetType, value);
-        }
-
-        /// <inheritdoc />
-        public object TryConvert(Type sourceType, Type targetType, object value)
-        {
-            return this.TryConvert(sourceType, targetType, value, null);
         }
 
         /// <inheritdoc />
@@ -140,7 +127,7 @@ namespace TypeConverter
             {
                 return convertedEnum;
             }
-            
+
             // Attempt 4: We essentially make a guess that to convert from a string
             // to an arbitrary type T there will be a static method defined on type T called Parse
             // that will take an argument of type string. i.e. T.Parse(string)->T we call this
@@ -178,10 +165,10 @@ namespace TypeConverter
                 return null;
             }
 
-            var matchingConverterInterface = genericConverter.GetType().GetTypeInfo().ImplementedInterfaces.SingleOrDefault(i =>
-                i.GenericTypeArguments.Length == 2 && 
-                i.GenericTypeArguments[0] == sourceType && 
-                i.GenericTypeArguments[1] == targetType);
+            var matchingConverterInterface =
+                genericConverter.GetType()
+                    .GetTypeInfo()
+                    .ImplementedInterfaces.SingleOrDefault(i => i.GenericTypeArguments.Length == 2 && i.GenericTypeArguments[0] == sourceType && i.GenericTypeArguments[1] == targetType);
 
             // Call Convert method on the particular interface
             var convertMethodGeneric = matchingConverterInterface.GetTypeInfo().GetDeclaredMethod("Convert");
@@ -228,7 +215,6 @@ namespace TypeConverter
                 var parseMethod = targetType.GetRuntimeMethod("Parse", new[] { sourceType });
                 if (parseMethod != null)
                 {
-
                     return parseMethod.Invoke(this, new[] { value });
                 }
             }
