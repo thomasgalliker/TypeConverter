@@ -146,7 +146,7 @@ namespace TypeConverter.Tests
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             // Act
-            var convertedObject = converterRegistry.TryConvert<Uri>(InputString);
+            var convertedObject = converterRegistry.TryConvert<Uri>(InputString, null);
 
             // Assert
             convertedObject.Should().BeNull();
@@ -166,6 +166,20 @@ namespace TypeConverter.Tests
             convertedObject.Should().Be(Guid.Empty);
         }
 
+        [Fact]
+        public void ShouldTryConvertEnumImplicitly()
+        {
+            // Arrange
+            object sourceObject = MyEnum.TestValue;
+            const MyEnum DefaultValue = default(MyEnum);
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            MyEnum convertedObject = converterRegistry.TryConvert(sourceObject, DefaultValue);
+
+            // Assert
+            convertedObject.Should().Be(sourceObject);
+        }
         #endregion
 
         #region Implicit and explicit cast tests
@@ -196,6 +210,34 @@ namespace TypeConverter.Tests
 
             // Assert
             convertedList.Should().BeEquivalentTo(stringList);
+        }
+
+        [Fact]
+        public void ShouldConvertEnumerableToArray()
+        {
+            // Arrange
+            string[] stringArray = { "a", "b", "c" };
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedList = (IEnumerable<string>)converterRegistry.Convert(typeof(IEnumerable<string>), stringArray);
+
+            // Assert
+            convertedList.Should().BeEquivalentTo(stringArray);
+        }
+
+        [Fact]
+        public void ShouldThrowConversionNotSupportedExceptionWhenTryingToConvertArrayToEnumerable()
+        {
+            // Arrange
+            List<string> stringList = new List<string> { "a", "b", "c" };
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            Action action = () => converterRegistry.Convert(typeof(string[]), stringList);
+
+            // Assert
+            Assert.Throws<ConversionNotSupportedException>(action);
         }
 
         [Fact]
