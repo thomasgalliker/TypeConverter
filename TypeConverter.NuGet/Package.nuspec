@@ -25,7 +25,7 @@
       - Improved support for implicit and explicit type casting
       - TryConvert API cleaned-up
     </releaseNotes>
-    <copyright>Copyright 2015</copyright>
+    <copyright>Copyright 2016</copyright>
     <language>en-US</language>
     <dependencies>
       <group targetFramework="MonoTouch10">
