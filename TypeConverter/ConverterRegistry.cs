@@ -121,14 +121,21 @@ namespace TypeConverter
                 return castedValue.Value;
             }
 
-            // Attempt 3: Try to convert generic enum
+            // Attempt 3: Use System.Convert.ChangeType to change value to targetType
+            var typeChangedValue = this.TryConvertGenericallyUsingChangeType(targetType, value);
+            if (typeChangedValue != null && typeChangedValue.IsSuccessful)
+            {
+                return typeChangedValue.Value;
+            }
+
+            // Attempt 4: Try to convert generic enum
             var convertedEnum = this.TryConvertEnumGenerically(sourceType, targetType, value);
             if (convertedEnum != null)
             {
                 return convertedEnum;
             }
 
-            // Attempt 4: We essentially make a guess that to convert from a string
+            // Attempt 5: We essentially make a guess that to convert from a string
             // to an arbitrary type T there will be a static method defined on type T called Parse
             // that will take an argument of type string. i.e. T.Parse(string)->T we call this
             // method to convert the string to the type required by the property.
@@ -180,6 +187,26 @@ namespace TypeConverter
             var convertMethodGeneric = matchingConverterInterface.GetTypeInfo().GetDeclaredMethod("Convert");
             var convertedValue = convertMethodGeneric.Invoke(genericConverter, new[] { value });
             return convertedValue;
+        }
+
+        private CastResult TryConvertGenericallyUsingChangeType(Type targetType, object value)
+        {
+            try
+            {
+                if (Nullable.GetUnderlyingType(targetType) != null)
+                {
+                    return this.TryConvertGenericallyUsingChangeType(Nullable.GetUnderlyingType(targetType), value);
+                }
+
+                // ChangeType basically does some conversion checks
+                // and then tries to perform the according Convert.ToWhatever(value) method.
+                // See: http://referencesource.microsoft.com/#mscorlib/system/convert.cs,3bcca7a9bda4114e
+                return new CastResult(System.Convert.ChangeType(value, targetType), CastFlag.Undefined);
+            }
+            catch(Exception ex)
+            {
+                return new CastResult(ex, CastFlag.Undefined);
+            }
         }
 
         /// <inheritdoc />

@@ -271,6 +271,21 @@ namespace TypeConverter.Tests
         }
 
         [Fact]
+        public void ShouldConvertUsingChangeType()
+        {
+            // Arrange
+            bool? nullableBool = true;
+            string valueTypeString = nullableBool.ToString();
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var nullableValue = converterRegistry.Convert<bool?>(valueTypeString);
+
+            // Assert
+            nullableValue.Should().Be(nullableBool.Value);
+        }
+
+        [Fact]
         public void ShouldConvertValueTypeToNullableType()
         {
             // Arrange
