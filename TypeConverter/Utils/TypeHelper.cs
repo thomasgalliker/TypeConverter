@@ -42,17 +42,6 @@ namespace TypeConverter.Utils
                         CastFlag.Undefined);
             }
 
-            var key = new KeyValuePair<Type, Type>(sourceType, targetType);
-            Tuple<bool, CastFlag> cachedValue;
-            if (CastCache.TryGetCachedValue(key, out cachedValue))
-            {
-                if (cachedValue.Item1)
-                {
-                    return new CastResult(value, cachedValue.Item2);
-                }
-                return new CastResult(ConversionNotSupportedException.Create(sourceType, targetType), CastFlag.Undefined);
-            }
-
             CastResult castResult = null;
             CastFlag castFlag = CastFlag.Undefined;
 
@@ -116,8 +105,6 @@ namespace TypeConverter.Utils
             {
                 castResult = new CastResult(ConversionNotSupportedException.Create(sourceType, targetType), castFlag);
             }
-
-            CastCache.UpdateCache(key, new Tuple<bool, CastFlag>(castResult.IsSuccessful, castResult.CastFlag));
 
             return castResult;
         }
@@ -186,46 +173,5 @@ namespace TypeConverter.Utils
 
             return list[0];
         }
-
-        #region ---- Caching ----
-
-        public static bool IsCacheEnabled = true;
-        private const int MaxCacheSize = 5000;
-        private static readonly Dictionary<KeyValuePair<Type, Type>, Tuple<bool, CastFlag>> CastCache = new Dictionary<KeyValuePair<Type, Type>, Tuple<bool, CastFlag>>();
-
-        private static readonly object SyncObj = new object();
-
-        private static bool TryGetCachedValue<TKey, TValue>(this Dictionary<TKey, TValue> cache, TKey key, out TValue value)
-        {
-            if (IsCacheEnabled == false)
-            {
-                value = default(TValue);
-                return false;
-            }
-
-            lock (SyncObj)
-            {
-                return cache.TryGetValue(key, out value);
-            }
-        }
-
-        private static void UpdateCache<TKey, TValue>(this Dictionary<TKey, TValue> cache, TKey key, TValue value)
-        {
-            if (IsCacheEnabled == false)
-            {
-                return;
-            }
-
-            lock (SyncObj)
-            {
-                if (cache.Count > MaxCacheSize)
-                {
-                    cache.Clear();
-                }
-                cache[key] = value;
-            }
-        }
-
-        #endregion
     }
 }

@@ -28,13 +28,6 @@ namespace TypeConverter
         void RegisterConverter<TSource, TTarget>(Type converterType);
 
         /// <summary>
-        ///     Returns the registered converter which converts between generic types TSource and TTarget.
-        /// </summary>
-        /// <typeparam name="TSource">Generic source type.</typeparam>
-        /// <typeparam name="TTarget">Generic target type.</typeparam>
-        IConvertable<TSource, TTarget> GetConverterForType<TSource, TTarget>();
-
-        /// <summary>
         ///     Clears all registered IConverters
         ///     and purges the cache.
         /// </summary>

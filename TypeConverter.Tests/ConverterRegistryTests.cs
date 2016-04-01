@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using FluentAssertions;
 
+using TypeConverter.Caching;
 using TypeConverter.Converters;
 using TypeConverter.Exceptions;
 using TypeConverter.Tests.Stubs;
@@ -21,10 +22,9 @@ namespace TypeConverter.Tests
         public ConverterRegistryTests(ITestOutputHelper testOutputHelper)
         {
             this.testOutputHelper = testOutputHelper;
-            TypeHelper.IsCacheEnabled = false;
         }
 
-        #region IConverable Tests
+        #region IConvertable Tests
 
         [Fact]
         public void ShouldThrowConversionNotSupportedExceptionWhenTryingToConvertWithoutValidRegistration()
@@ -271,21 +271,6 @@ namespace TypeConverter.Tests
         }
 
         [Fact]
-        public void ShouldConvertUsingChangeType()
-        {
-            // Arrange
-            bool? nullableBool = true;
-            string valueTypeString = nullableBool.ToString();
-            IConverterRegistry converterRegistry = new ConverterRegistry();
-
-            // Act
-            var nullableValue = converterRegistry.Convert<bool?>(valueTypeString);
-
-            // Assert
-            nullableValue.Should().Be(nullableBool.Value);
-        }
-
-        [Fact]
         public void ShouldConvertValueTypeToNullableType()
         {
             // Arrange
@@ -311,6 +296,26 @@ namespace TypeConverter.Tests
 
             // Assert
             convertedValue.Should().Be((int)DoubleValue);
+        }
+
+        [Fact]
+        public void ShouldConvertIntegerToDoubleExplicitly()
+        {
+            // Arrange
+            //const double DoubleValue = 0.0d;
+            int IntegerValue = 999;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+            
+
+            // Act
+            var convertedValue = converterRegistry.TryConvert((object)(int)999, (int)0);
+            var convertedValue2 = converterRegistry.TryConvert((object)(int)999, (double)0);
+
+            var convertedValue3 = converterRegistry.TryConvert((object)(int)999, (int)0);
+            var convertedValue4 = converterRegistry.TryConvert((object)(int)999, (double)0);
+
+            // Assert
+            convertedValue.Should().Be(IntegerValue);
         }
 
         [Fact]
@@ -455,9 +460,25 @@ namespace TypeConverter.Tests
 
         #endregion
 
-        #region String Parse Tests
+        #region ChangeType Tests
+
         [Fact]
-        public void ShouldConvertUsingGenericStringParseMethod()
+        public void ShouldConvertUsingChangeType()
+        {
+            // Arrange
+            bool? nullableBool = true;
+            string valueTypeString = nullableBool.ToString();
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var nullableValue = converterRegistry.Convert<bool?>(valueTypeString);
+
+            // Assert
+            nullableValue.Should().Be(nullableBool.Value);
+        }
+
+        [Fact]
+        public void ShouldConvertUsingChangeTypeMethodFromStringToInt()
         {
             // Arrange
             const string InputString = "999";
@@ -473,6 +494,42 @@ namespace TypeConverter.Tests
             outputString.Should().NotBeNull();
             outputString.Should().Be(InputString);
         }
+
+        [Fact]
+        public void ShouldConvertUsingChangeTypeMethodFromStringToBool()
+        {
+            // Arrange
+            const string InputString = "True";
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var convertedObject = (bool)converterRegistry.Convert(typeof(bool), InputString);
+            var outputString = converterRegistry.Convert(typeof(string), convertedObject);
+
+            // Assert
+            convertedObject.Should().BeTrue();
+
+            outputString.Should().NotBeNull();
+            outputString.Should().Be(InputString);
+        }
+        #endregion
+
+        #region String Parse Tests
+        [Fact]
+        public void ShouldConvertUsingStringParse()
+        {
+            // Arrange
+            const string InputString = "http://www.thomasgalliker.ch/";
+            Uri inputUri = new Uri(InputString);
+
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var uriAsString = converterRegistry.Convert<Uri, string>(inputUri);
+
+            // Assert
+            uriAsString.Should().Be(InputString);
+        }
         #endregion
 
         #region General Tests
@@ -480,19 +537,39 @@ namespace TypeConverter.Tests
         public void ShouldResetRegistrations()
         {
             // Arrange
+            const string InputString = "http://www.thomasgalliker.ch";
+            int numberOfConvertCalls = 0;
             IConverterRegistry converterRegistry = new ConverterRegistry();
-            converterRegistry.RegisterConverter<string, Uri>(() => new StringToUriConverter());
-            converterRegistry.RegisterConverter<Uri, string>(() => new StringToUriConverter());
+            var converter = new TestConverter(() => { numberOfConvertCalls++; });
+            converterRegistry.RegisterConverter<string, Uri>(() => converter);
 
             // Act
+            var convertedInputStringBeforeReset = converterRegistry.TryConvert<string, Uri>(InputString, null);
+
             converterRegistry.Reset();
 
-            // Assert
-            var converterForTypeStringToUri = converterRegistry.GetConverterForType<string, Uri>();
-            converterForTypeStringToUri.Should().BeNull();
+            var convertedInputStringAfterReset = converterRegistry.TryConvert<string, Uri>(InputString, null);
 
-            var converterForTypeUriToString = converterRegistry.GetConverterForType<Uri, string>();
-            converterForTypeUriToString.Should().BeNull();
+            // Assert
+            numberOfConvertCalls.Should().Be(1);
+            convertedInputStringBeforeReset.Should().Be(InputString);
+            convertedInputStringAfterReset.Should().BeNull();
+        }
+
+        private class TestConverter : IConvertable<string, Uri>
+        {
+            private readonly Action convert;
+
+            public TestConverter(Action convert)
+            {
+                this.convert = convert;
+            }
+
+            public Uri Convert(string value)
+            {
+                this.convert();
+                return new Uri(value);
+            }
         }
         #endregion
     }

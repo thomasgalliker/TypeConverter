@@ -27,8 +27,6 @@ namespace TypeConverter.Tests
         [Fact]
         public void ShouldRunAllCasts()
         {
-            TypeHelper.IsCacheEnabled = false;
-
             CastTestRunner.RunTests(testCase =>
                 {
                     // Arrange

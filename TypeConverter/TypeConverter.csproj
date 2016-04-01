@@ -41,12 +41,21 @@
     <AssemblyOriginatorKeyFile>TypeConverterKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Attempts\CastAttempt.cs" />
+    <Compile Include="Attempts\ChangeTypeAttempt.cs" />
+    <Compile Include="Attempts\CustomConvertAttempt.cs" />
+    <Compile Include="Attempts\StringParseAttempt.cs" />
+    <Compile Include="Attempts\EnumParseAttempt.cs" />
+    <Compile Include="Attempts\IConversionAttempt.cs" />
+    <Compile Include="Caching\CacheResult.cs" />
     <Compile Include="ConverterRegistry.cs" />
     <Compile Include="Converters\StringToBoolConverter.cs" />
     <Compile Include="Converters\StringToDoubleConverter.cs" />
     <Compile Include="Converters\StringToUriConverter.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="IConverter.cs" />
+    <Compile Include="Caching\IConverterCache.cs" />
+    <Compile Include="Caching\CacheManager.cs" />
     <Compile Include="Utils\CastFlag.cs" />
     <Compile Include="Utils\CastResult.cs" />
     <Compile Include="Utils\TypeHelper.cs" />

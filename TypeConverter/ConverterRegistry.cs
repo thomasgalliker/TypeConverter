@@ -5,19 +5,32 @@ using System.Reflection;
 
 using Guards;
 
+using TypeConverter.Attempts;
+using TypeConverter.Caching;
 using TypeConverter.Exceptions;
 using TypeConverter.Extensions;
 using TypeConverter.Utils;
 
 namespace TypeConverter
 {
-    public class ConverterRegistry : IConverterRegistry
+    public class ConverterRegistry : IConverterRegistry, IConverterCache
     {
-        private readonly Dictionary<Tuple<Type, Type>, Func<IConvertable>> converters;
+        private readonly CacheManager cacheManager;
+        private readonly IList<IConversionAttempt> conversionAttempts;
 
         public ConverterRegistry()
         {
-            this.converters = new Dictionary<Tuple<Type, Type>, Func<IConvertable>>();
+            this.conversionAttempts = new List<IConversionAttempt>
+            {
+                new CustomConvertAttempt(),
+                new CastAttempt(),
+                new ChangeTypeAttempt(),
+                new EnumParseAttempt(),
+                new StringParseAttempt()
+            };
+
+            this.cacheManager = new CacheManager();
+            this.cacheManager.IsCacheEnabled = true;
         }
 
         /// <inheritdoc />
@@ -25,10 +38,8 @@ namespace TypeConverter
         {
             Guard.ArgumentNotNull(() => converterFactory);
 
-            lock (this.converters)
-            {
-                this.converters.Add(new Tuple<Type, Type>(typeof(TSource), typeof(TTarget)), converterFactory);
-            }
+            var customConvertStrategy = this.conversionAttempts.Single(a => a.GetType() == typeof(CustomConvertAttempt));
+            ((CustomConvertAttempt)customConvertStrategy).RegisterConverter(converterFactory);
         }
 
         /// <inheritdoc />
@@ -105,44 +116,27 @@ namespace TypeConverter
             Guard.ArgumentNotNull(() => sourceType);
             Guard.ArgumentNotNull(() => targetType);
 
-            // Attempt 1: Try to convert using registered converter
-            // Having TryConvertGenericallyUsingConverterStrategy as a first attempt, the user of this library has the chance
-            // to influence the conversion process with first priority.
-            var convertedValue = this.TryConvertGenericallyUsingConverterStrategy(sourceType, targetType, value);
-            if (convertedValue != null)
+            // Try to read conversion method from cache
+            var cachedValue = this.TryGetCachedValue(value, sourceType, targetType);
+            if (cachedValue != null && cachedValue.IsSuccessful)
             {
-                return convertedValue;
+                return cachedValue.Value;
             }
 
-            // Attempt 2: Use implicit or explicit casting if supported
-            var castedValue = TypeHelper.CastTo(value, targetType);
-            if (castedValue != null && castedValue.IsSuccessful)
+            // Try to convert using defined sequence of conversion attempts
+            foreach (var conversionAttempt in this.conversionAttempts)
             {
-                return castedValue.Value;
-            }
+                var conversionResult = conversionAttempt.TryConvert(value, sourceType, targetType);
+                if (conversionResult != null && conversionResult.IsSuccessful)
+                {
+                    this.cacheManager.UpdateCache(
+                        sourceType: sourceType,
+                        targetType: targetType, 
+                        isConvertable: conversionResult.IsSuccessful, 
+                        conversionAttempt: conversionAttempt);
 
-            // Attempt 3: Use System.Convert.ChangeType to change value to targetType
-            var typeChangedValue = this.TryConvertGenericallyUsingChangeType(targetType, value);
-            if (typeChangedValue != null && typeChangedValue.IsSuccessful)
-            {
-                return typeChangedValue.Value;
-            }
-
-            // Attempt 4: Try to convert generic enum
-            var convertedEnum = this.TryConvertEnumGenerically(sourceType, targetType, value);
-            if (convertedEnum != null)
-            {
-                return convertedEnum;
-            }
-
-            // Attempt 5: We essentially make a guess that to convert from a string
-            // to an arbitrary type T there will be a static method defined on type T called Parse
-            // that will take an argument of type string. i.e. T.Parse(string)->T we call this
-            // method to convert the string to the type required by the property.
-            var parsedValue = this.TryParseGenerically(sourceType, targetType, value);
-            if (parsedValue != null)
-            {
-                return parsedValue;
+                    return conversionResult.Value;
+                }
             }
 
             // If all fails, we either throw an exception
@@ -160,128 +154,48 @@ namespace TypeConverter
             return defaultReturnValue;
         }
 
-        private object TryConvertGenericallyUsingConverterStrategy(Type sourceType, Type targetType, object value)
+        private CastResult TryGetCachedValue(object value, Type sourceType, Type targetType)
         {
-            if (sourceType.GetTypeInfo().ContainsGenericParameters || targetType.GetTypeInfo().ContainsGenericParameters)
+            var cacheResult = this.cacheManager.TryGetCachedValue(sourceType, targetType);
+            if (cacheResult.IsCached)
             {
-                // Cannot deal with open generics, like IGenericOperators<>
-                return null;
-            }
-
-            // Call generic method GetConverterForType to retrieve generic IConverter<TSource, TTarget>
-            var getConverterForTypeMethod = ReflectionHelper.GetMethod(() => this.GetConverterForType<object, object>()).GetGenericMethodDefinition();
-            var genericGetConverterForTypeMethod = getConverterForTypeMethod.MakeGenericMethod(sourceType, targetType);
-
-            var genericConverter = genericGetConverterForTypeMethod.Invoke(this, null);
-            if (genericConverter == null)
-            {
-                return null;
-            }
-
-            var matchingConverterInterface =
-                genericConverter.GetType()
-                    .GetTypeInfo()
-                    .ImplementedInterfaces.SingleOrDefault(i => i.GenericTypeArguments.Length == 2 && i.GenericTypeArguments[0] == sourceType && i.GenericTypeArguments[1] == targetType);
-
-            // Call Convert method on the particular interface
-            var convertMethodGeneric = matchingConverterInterface.GetTypeInfo().GetDeclaredMethod("Convert");
-            var convertedValue = convertMethodGeneric.Invoke(genericConverter, new[] { value });
-            return convertedValue;
-        }
-
-        private CastResult TryConvertGenericallyUsingChangeType(Type targetType, object value)
-        {
-            try
-            {
-                if (Nullable.GetUnderlyingType(targetType) != null)
+                if (cacheResult.IsConvertable)
                 {
-                    return this.TryConvertGenericallyUsingChangeType(Nullable.GetUnderlyingType(targetType), value);
+                    var cachedAttempt = this.conversionAttempts.Single(a => a == cacheResult.ConversionAttempt);
+                    var convertedValue = cachedAttempt.TryConvert(value, sourceType, targetType);
+                    return convertedValue;
                 }
 
-                // ChangeType basically does some conversion checks
-                // and then tries to perform the according Convert.ToWhatever(value) method.
-                // See: http://referencesource.microsoft.com/#mscorlib/system/convert.cs,3bcca7a9bda4114e
-                return new CastResult(System.Convert.ChangeType(value, targetType), CastFlag.Undefined);
-            }
-            catch(Exception ex)
-            {
-                return new CastResult(ex, CastFlag.Undefined);
-            }
-        }
-
-        /// <inheritdoc />
-        public IConvertable<TSource, TTarget> GetConverterForType<TSource, TTarget>()
-        {
-            lock (this.converters)
-            {
-                var key = new Tuple<Type, Type>(typeof(TSource), typeof(TTarget));
-                if (this.converters.ContainsKey(key))
-                {
-                    var converterFactory = this.converters[key];
-                    return (IConvertable<TSource, TTarget>)converterFactory();
-                }
-
-                return null;
-            }
-        }
-
-        private object TryConvertEnumGenerically(Type sourceType, Type targetType, object value)
-        {
-            if (sourceType.GetTypeInfo().IsEnum)
-            {
-                return value.ToString();
-            }
-
-            if (targetType.GetTypeInfo().IsEnum)
-            {
-                try
-                {
-                    return Enum.Parse(targetType, value.ToString(), true);
-                }
-                catch (ArgumentException)
-                {
-                    // Unfortunately, we cannot use Enum.TryParse in this case,
-                    // The only way to catch failing parses is this ugly try-catch
-                    return null;
-                }
-            }
-
-            return null;
-        }
-
-        private object TryParseGenerically(Type sourceType, Type targetType, object value)
-        {
-            // Either of both, sourceType or targetType, need to be typeof(string)
-            if (sourceType == typeof(string) && targetType != typeof(string))
-            {
-                var parseMethod = targetType.GetRuntimeMethod("Parse", new[] { sourceType });
-                if (parseMethod != null)
-                {
-                    try
-                    {
-                        return parseMethod.Invoke(this, new[] { value });
-                    }
-                    catch (Exception)
-                    {
-                        return null;
-                    }
-                }
-            }
-            else if (targetType == typeof(string) && sourceType != typeof(string))
-            {
-                return value.ToString();
+                return new CastResult(ConversionNotSupportedException.Create(sourceType, targetType), CastFlag.Undefined);
             }
 
             return null;
         }
 
         /// <inheritdoc />
-        public void Reset()
+        void IConverterRegistry.Reset()
         {
-            lock (this.converters)
+            var customConvertStrategy = this.conversionAttempts.Single(a => a.GetType() == typeof(CustomConvertAttempt));
+            ((CustomConvertAttempt)customConvertStrategy).Reset();
+        }
+
+        /// <inheritdoc />
+        public bool IsCacheEnabled
+        {
+            get
             {
-                this.converters.Clear();
+                return this.cacheManager.IsCacheEnabled;
             }
+            set
+            {
+                this.cacheManager.IsCacheEnabled = value;
+            }
+        }
+
+        /// <inheritdoc />
+        void IConverterCache.Reset()
+        {
+            this.cacheManager.Reset();
         }
     }
 }

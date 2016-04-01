@@ -85,6 +85,7 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="Caching\CacheManagerTests.cs" />
     <Compile Include="Converters\StringToIntegerConverterTests.cs" />
     <Compile Include="Converters\StringToDoubleConverterTests.cs" />
     <Compile Include="Converters\StringToBoolConverterTests.cs" />
