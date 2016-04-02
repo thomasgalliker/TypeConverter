@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Reflection;
 
-using TypeConverter.Utils;
-
 namespace TypeConverter.Attempts
 {
     // Attempt 5: We essentially make a guess that to convert from a string
@@ -11,7 +9,7 @@ namespace TypeConverter.Attempts
     // method to convert the string to the type required by the property.
     internal class StringParseAttempt : IConversionAttempt
     {
-        public CastResult TryConvert(object value, Type sourceType, Type targetType)
+        public ConversionResult TryConvert(object value, Type sourceType, Type targetType)
         {
             // Either of both, sourceType or targetType, need to be typeof(string)
             if (sourceType == typeof(string) && targetType != typeof(string))
@@ -21,7 +19,7 @@ namespace TypeConverter.Attempts
                 {
                     try
                     {
-                        return new CastResult(parseMethod.Invoke(this, new[] { value }), CastFlag.Undefined);
+                        return new ConversionResult(parseMethod.Invoke(this, new[] { value }));
                     }
                     catch (Exception)
                     {
@@ -31,7 +29,7 @@ namespace TypeConverter.Attempts
             }
             else if (targetType == typeof(string) && sourceType != typeof(string))
             {
-                return new CastResult(value.ToString(), CastFlag.Undefined);
+                return new ConversionResult(value.ToString());
             }
 
             return null;

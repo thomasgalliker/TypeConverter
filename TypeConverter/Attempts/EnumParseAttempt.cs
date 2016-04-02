@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Reflection;
 
-using TypeConverter.Utils;
-
 namespace TypeConverter.Attempts
 {
     // Attempt 4: Try to convert generic enum
     internal class EnumParseAttempt : IConversionAttempt
     {
-        public CastResult TryConvert(object value, Type sourceType, Type targetType)
+        public ConversionResult TryConvert(object value, Type sourceType, Type targetType)
         {
             if (sourceType.GetTypeInfo().IsEnum)
             {
-                return new CastResult(value.ToString(), CastFlag.Undefined);
+                return new ConversionResult(value.ToString());
             }
 
             if (targetType.GetTypeInfo().IsEnum)
             {
                 try
                 {
-                    return new CastResult(Enum.Parse(targetType, value.ToString(), true), CastFlag.Undefined);
+                    return new ConversionResult(Enum.Parse(targetType, value.ToString(), true));
                 }
                 catch (ArgumentException)
                 {

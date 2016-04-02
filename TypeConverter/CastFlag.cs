@@ -1,5 +1,5 @@
 ﻿
-namespace TypeConverter.Utils
+namespace TypeConverter
 {
     internal enum CastFlag
     {

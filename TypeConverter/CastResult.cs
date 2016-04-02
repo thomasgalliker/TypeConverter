@@ -1,39 +1,23 @@
 ﻿using System;
 using System.Diagnostics;
 
-using Guards;
-
-namespace TypeConverter.Utils
+namespace TypeConverter
 {
     [DebuggerDisplay("Value = {Value}, IsSuccessful = {IsSuccessful}, CastFlag = {CastFlag}")]
-    internal class CastResult // : IEquatable<CastResult>
+    internal class CastResult : ConversionResult
     {
         public CastResult(object value, CastFlag castFlag)
+            : base(value)
         {
-            this.Value = value;
             this.CastFlag = castFlag;
         }
 
         public CastResult(Exception exception, CastFlag castFlag)
+            : base(exception)
         {
-            Guard.ArgumentNotNull(() => exception);
-
-            this.Exception = exception;
             this.CastFlag = castFlag;
         }
-
-        public bool IsSuccessful
-        {
-            get
-            {
-                return this.Exception == null;
-            }
-        }
-
-        public object Value { get; private set; }
-
-        public Exception Exception { get; private set; }
-
+        
         public CastFlag CastFlag { get; private set; }
 
         ////public override bool Equals(object obj)

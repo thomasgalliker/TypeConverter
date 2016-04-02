@@ -19,7 +19,7 @@
     </description>
     <tags>
       TypeConverter convert conversion type mapping mapper
-      windows phone winphone wp8 wpa81 win81 windowsphone android xamarin.forms xamarin.ios ios monoandroid monodroid monotouch mvvmcross mvvmlight
+      windows phone winphone wp8 wpa81 win81 windowsphone android xamarin.forms xamarin.ios ios xamarin.android monoandroid monodroid monotouch
     </tags>
     <releaseNotes>
       1.0.27-pre1

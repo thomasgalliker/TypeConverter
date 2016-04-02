@@ -154,7 +154,7 @@ namespace TypeConverter
             return defaultReturnValue;
         }
 
-        private CastResult TryGetCachedValue(object value, Type sourceType, Type targetType)
+        private ConversionResult TryGetCachedValue(object value, Type sourceType, Type targetType)
         {
             var cacheResult = this.cacheManager.TryGetCachedValue(sourceType, targetType);
             if (cacheResult.IsCached)
@@ -166,7 +166,7 @@ namespace TypeConverter
                     return convertedValue;
                 }
 
-                return new CastResult(ConversionNotSupportedException.Create(sourceType, targetType), CastFlag.Undefined);
+                return new ConversionResult(ConversionNotSupportedException.Create(sourceType, targetType));
             }
 
             return null;

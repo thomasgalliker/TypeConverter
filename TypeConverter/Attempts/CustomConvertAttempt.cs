@@ -27,7 +27,7 @@ namespace TypeConverter.Attempts
             }
         }
 
-        public CastResult TryConvert(object value, Type sourceType, Type targetType)
+        public ConversionResult TryConvert(object value, Type sourceType, Type targetType)
         {
             if (sourceType.GetTypeInfo().ContainsGenericParameters || targetType.GetTypeInfo().ContainsGenericParameters)
             {
@@ -53,7 +53,7 @@ namespace TypeConverter.Attempts
             // Call Convert method on the particular interface
             var convertMethodGeneric = matchingConverterInterface.GetTypeInfo().GetDeclaredMethod("Convert");
             var convertedValue = convertMethodGeneric.Invoke(genericConverter, new[] { value });
-            return new CastResult(convertedValue, CastFlag.Undefined);
+            return new ConversionResult(convertedValue);
         }
 
         internal IConvertable<TSource, TTarget> GetConverterForType<TSource, TTarget>()

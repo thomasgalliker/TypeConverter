@@ -1,4 +1,4 @@
-namespace TypeConverter.Caching
+namespace TypeConverter
 {
     public interface IConverterCache
     {
