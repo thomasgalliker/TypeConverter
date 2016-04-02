@@ -172,6 +172,7 @@ namespace TypeConverter
             return null;
         }
 
+        #region IConverterRegistry facade implementation
         /// <inheritdoc />
         void IConverterRegistry.Reset()
         {
@@ -180,7 +181,7 @@ namespace TypeConverter
         }
 
         /// <inheritdoc />
-        public bool IsCacheEnabled
+        bool IConverterCache.IsCacheEnabled
         {
             get
             {
@@ -193,9 +194,36 @@ namespace TypeConverter
         }
 
         /// <inheritdoc />
+        bool IConverterCache.IsMaxCacheSizeEnabled
+        {
+            get
+            {
+                return this.cacheManager.IsMaxCacheSizeEnabled;
+            }
+            set
+            {
+                this.cacheManager.IsMaxCacheSizeEnabled = value;
+            }
+        }
+
+        /// <inheritdoc />
+        public int MaxCacheSize
+        {
+            get
+            {
+                return this.cacheManager.MaxCacheSize;
+            }
+            set
+            {
+                this.cacheManager.MaxCacheSize = value;
+            }
+        }
+
+        /// <inheritdoc />
         void IConverterCache.Reset()
         {
             this.cacheManager.Reset();
         }
+        #endregion
     }
 }

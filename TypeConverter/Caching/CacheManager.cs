@@ -1,24 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Linq;
 
 using TypeConverter.Attempts;
 
 namespace TypeConverter.Caching
 {
+    /// <summary>
+    /// CacheManager is an internal data structure which stores conversion strategies
+    /// for type-to-type mappings.
+    /// </summary>
     internal class CacheManager
     {
-        private readonly Dictionary<KeyValuePair<Type, Type>, Tuple<bool, IConversionAttempt>> cache = new Dictionary<KeyValuePair<Type, Type>, Tuple<bool, IConversionAttempt>>();
+        private Dictionary<KeyValuePair<Type, Type>, WeightedCacheResult> cache = new Dictionary<KeyValuePair<Type, Type>, WeightedCacheResult>();
         private readonly object syncObj = new object();
-
-        ////private const int MaxCacheSize = 5000; // TODO: Implement read-weighted buffer system
+        private bool isMaxCacheSizeEnabled;
 
         public CacheManager()
         {
             this.IsCacheEnabled = false;
+            this.MaxCacheSize = 5000;
+            this.IsMaxCacheSizeEnabled = false;
         }
 
         internal bool IsCacheEnabled { get; set; }
+
+        internal bool IsMaxCacheSizeEnabled
+        {
+            get
+            {
+                return this.isMaxCacheSizeEnabled;
+            }
+            set
+            {
+                if (this.isMaxCacheSizeEnabled != value)
+                {
+                    this.isMaxCacheSizeEnabled = value;
+                    this.ReduceCacheSize(this.MaxCacheSize);
+                }
+            }
+        }
+
+        internal int MaxCacheSize { get; set; }
+
+        private void ReduceCacheSize(int newCacheSize)
+        {
+            lock (this.syncObj)
+            {
+                if (this.IsMaxCacheSizeEnabled && this.cache.Count >= this.MaxCacheSize)
+                {
+                    // Take the top-weighted cache items according to ReadAccessCount
+                    this.cache = this.cache
+                        .OrderByDescending(x => x.Value.ReadAccessCount)
+                        .Take(newCacheSize)
+                        .ToDictionary(s => s.Key, s => s.Value);
+                }
+            }
+        }
 
         internal void UpdateCache(Type sourceType, Type targetType, bool isConvertable, IConversionAttempt conversionAttempt)
         {
@@ -29,17 +67,19 @@ namespace TypeConverter.Caching
 
             lock (this.syncObj)
             {
-                ////if (this.cache.Count > MaxCacheSize)
-                ////{
-                ////    this.cache.Clear();
-                ////}
+                this.ReduceCacheSize(this.MaxCacheSize - 1); // -1 because we are about to insert a new item
 
                 var key = new KeyValuePair<Type, Type>(sourceType, targetType);
-                var value = new Tuple<bool, IConversionAttempt>(isConvertable, conversionAttempt);
+                var value = new WeightedCacheResult(isCached: true, isConvertable: isConvertable, conversionAttempt: conversionAttempt);
+
                 this.cache[key] = value;
             }
         }
 
+        /// <summary>
+        /// Tries to get a CacheResult from given {sourceType, targetType} mapping.
+        /// </summary>
+        /// <returns>A CacheResult which indicates if and how the given  {sourceType, targetType} mapping can be converted.</returns>
         internal CacheResult TryGetCachedValue(Type sourceType, Type targetType)
         {
             if (this.IsCacheEnabled == false)
@@ -49,17 +89,17 @@ namespace TypeConverter.Caching
 
             lock (this.syncObj)
             {
-                Tuple<bool, IConversionAttempt> cachedValue = null;
+                WeightedCacheResult cacheResult = null;
                 var key = new KeyValuePair<Type, Type>(sourceType, targetType);
-                var isCached = this.cache.TryGetValue(key, out cachedValue);
-                if (cachedValue == null)
+                this.cache.TryGetValue(key, out cacheResult);
+
+                if (cacheResult != null)
                 {
-                    return new CacheResult(isCached: false);
+                    cacheResult.ReadAccessCount++;
+                    return cacheResult;
                 }
-                return new CacheResult(
-                    isCached: isCached, 
-                    isConvertable: cachedValue.Item1,
-                    conversionAttempt: cachedValue.Item2);
+
+                return new CacheResult(isCached: false);
             }
         }
 
@@ -69,6 +109,21 @@ namespace TypeConverter.Caching
             {
                 this.cache.Clear();
             }
+        }
+
+        private class WeightedCacheResult : CacheResult
+        {
+            public WeightedCacheResult(bool isCached)
+                : base(isCached)
+            {
+            }
+
+            public WeightedCacheResult(bool isCached, bool isConvertable, IConversionAttempt conversionAttempt)
+                : base(isCached, isConvertable, conversionAttempt)
+            {
+            }
+
+            public int ReadAccessCount { get; set; }
         }
     }
 }
