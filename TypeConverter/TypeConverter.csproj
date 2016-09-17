@@ -53,6 +53,7 @@
     <Compile Include="Converters\StringToDateTimeOffsetConverter.cs" />
     <Compile Include="Converters\StringToDateTimeConverter.cs" />
     <Compile Include="Converters\StringToBoolConverter.cs" />
+    <Compile Include="Converters\StringToFloatConverter.cs" />
     <Compile Include="Converters\StringToDecimalConverter.cs" />
     <Compile Include="Converters\StringToDoubleConverter.cs" />
     <Compile Include="Converters\StringToUriConverter.cs" />
