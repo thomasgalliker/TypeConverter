@@ -94,6 +94,7 @@
     <Compile Include="Converters\StringToIntegerConverterTests.cs" />
     <Compile Include="Converters\StringToDoubleConverterTests.cs" />
     <Compile Include="Converters\StringToBoolConverterTests.cs" />
+    <Compile Include="Converters\StringToGuidConverterTests.cs" />
     <Compile Include="Converters\StringToUriConverterTests.cs" />
     <Compile Include="Stubs\DerivedOperators.cs" />
     <Compile Include="Extensions\TypeExtensionsTests.cs" />

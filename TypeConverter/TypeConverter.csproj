@@ -56,6 +56,7 @@
     <Compile Include="Converters\StringToFloatConverter.cs" />
     <Compile Include="Converters\StringToDecimalConverter.cs" />
     <Compile Include="Converters\StringToDoubleConverter.cs" />
+    <Compile Include="Converters\StringToGuidConverter.cs" />
     <Compile Include="Converters\StringToUriConverter.cs" />
     <Compile Include="Converters\ToStringFormattableConvertable.cs" />
     <Compile Include="Extensions\ConverterRegistryExtensions.cs" />
