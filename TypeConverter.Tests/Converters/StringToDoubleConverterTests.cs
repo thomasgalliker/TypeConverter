@@ -9,23 +9,63 @@ namespace TypeConverter.Tests.Converters
     public class StringToDoubleConverterTests
     {
         [Fact]
-        public void ShouldConvertBothWays()
+        public void ShouldConvertDoubleMaxValueToString()
         {
             // Arrange
-            const string InputString = "1.9998";
+            double inputDouble = double.MaxValue;
             IConverterRegistry converterRegistry = new ConverterRegistry();
-            converterRegistry.RegisterConverter<string, double>(() => new StringToDoubleConverter());
             converterRegistry.RegisterConverter<double, string>(() => new StringToDoubleConverter());
 
             // Act
-            var convertedObject = converterRegistry.Convert<string, double>(InputString);
-            var outputString = converterRegistry.Convert<double, string>(convertedObject);
+            var outputString = converterRegistry.Convert<double, string>(inputDouble);
 
             // Assert
-            convertedObject.Should().Be(1.9998d);
+            outputString.Should().Be("1.7976931348623157E+308");
+        }
 
-            outputString.Should().NotBeNullOrEmpty();
-            outputString.Should().Be(InputString);
+        [Fact]
+        public void ShouldConvertDoubleMinValueToString()
+        {
+            // Arrange
+            double inputDouble = double.MinValue;
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+            converterRegistry.RegisterConverter<double, string>(() => new StringToDoubleConverter());
+
+            // Act
+            var outputString = converterRegistry.Convert<double, string>(inputDouble);
+
+            // Assert
+            outputString.Should().Be("-1.7976931348623157E+308");
+        }
+
+        [Fact]
+        public void ShouldConvertStringToDoubleMaxValue()
+        {
+            // Arrange
+            const string InputString = "1.7976931348623157E+308";
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+            converterRegistry.RegisterConverter<string, double>(() => new StringToDoubleConverter());
+
+            // Act
+            var outputDouble = converterRegistry.Convert<string, double>(InputString);
+
+            // Assert
+            outputDouble.Should().Be(double.MaxValue);
+        }
+
+        [Fact]
+        public void ShouldConvertStringToDoubleMinValue()
+        {
+            // Arrange
+            const string InputString = "-1.7976931348623157E+308";
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+            converterRegistry.RegisterConverter<string, double>(() => new StringToDoubleConverter());
+
+            // Act
+            var outputDouble = converterRegistry.Convert<string, double>(InputString);
+
+            // Assert
+            outputDouble.Should().Be(double.MinValue);
         }
     }
 }

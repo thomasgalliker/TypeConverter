@@ -1,4 +1,6 @@
-﻿namespace TypeConverter.Converters
+﻿using System.Globalization;
+
+namespace TypeConverter.Converters
 {
     public class StringToDoubleConverter : IConvertable<string, double>, IConvertable<double, string>
     {
@@ -9,7 +11,7 @@
 
         public string Convert(double value)
         {
-            return value.ToString();
+            return value.ToString("R", CultureInfo.InvariantCulture);
         }
     }
 }
