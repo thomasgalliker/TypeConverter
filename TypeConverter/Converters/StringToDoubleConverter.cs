@@ -2,16 +2,13 @@
 
 namespace TypeConverter.Converters
 {
-    public class StringToDoubleConverter : IConvertable<string, double>, IConvertable<double, string>
+    public class StringToDoubleConverter : ToStringFormattableConvertable<double>, IConvertable<string, double>
     {
+        protected override string Format { get { return "R"; } } // https://msdn.microsoft.com/en-us/library/dwhawy9k(v=vs.110).aspx#RFormatString
+
         public double Convert(string value)
         {
-            return double.Parse(value);
-        }
-
-        public string Convert(double value)
-        {
-            return value.ToString("R", CultureInfo.InvariantCulture);
+            return double.Parse(value, CultureInfo.InvariantCulture);
         }
     }
 }

@@ -3,18 +3,13 @@ using System.Globalization;
 
 namespace TypeConverter.Converters
 {
-    public class StringToDateTimeOffsetConverter : IConvertable<string, DateTimeOffset>, IConvertable<DateTimeOffset, string>
+    public class StringToDateTimeOffsetConverter : ToStringFormattableConvertable<DateTimeOffset>, IConvertable<string, DateTimeOffset>
     {
-        private const string DateTimeFormat = "O";
+        protected override string Format { get { return "O"; } } // https://msdn.microsoft.com/en-us/library/az4se3k1(v=vs.110).aspx#Roundtrip
 
         public DateTimeOffset Convert(string value)
         {
-            return DateTimeOffset.ParseExact(value, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-        }
-
-        public string Convert(DateTimeOffset value)
-        {
-            return value.ToString(DateTimeFormat, CultureInfo.InvariantCulture);
+            return DateTimeOffset.ParseExact(value, this.Format, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
         }
     }
 }

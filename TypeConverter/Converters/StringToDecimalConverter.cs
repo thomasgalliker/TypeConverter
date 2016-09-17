@@ -1,4 +1,6 @@
-﻿namespace TypeConverter.Converters
+﻿using System.Globalization;
+
+namespace TypeConverter.Converters
 {
     public class StringToDecimalConverter : ToStringFormattableConvertable<decimal>, IConvertable<string, decimal>
     {
@@ -6,7 +8,7 @@
 
         public decimal Convert(string value)
         {
-            return decimal.Parse(value);
+            return decimal.Parse(value, CultureInfo.InvariantCulture);
         }
     }
 }
