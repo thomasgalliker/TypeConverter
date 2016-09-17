@@ -50,6 +50,8 @@
     <Compile Include="Caching\CacheResult.cs" />
     <Compile Include="ConversionResult.cs" />
     <Compile Include="ConverterRegistry.cs" />
+    <Compile Include="Converters\StringToDateTimeOffsetConverter.cs" />
+    <Compile Include="Converters\StringToDateTimeConverter.cs" />
     <Compile Include="Converters\StringToBoolConverter.cs" />
     <Compile Include="Converters\StringToDoubleConverter.cs" />
     <Compile Include="Converters\StringToUriConverter.cs" />
