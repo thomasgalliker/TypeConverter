@@ -9,7 +9,13 @@ namespace TypeConverter
     public interface IConverterRegistry : IConverter
     {
         /// <summary>
-        ///     Registers a converter factory which converts between generic types TSource and TTarget.
+        ///     Registers a converter which converts between certain source and target types .
+        /// </summary>
+        /// <param name="converter">The converter which is used to convert beween source and target type.</param>
+        void RegisterConverter(IConvertable converter);
+
+        /// <summary>
+        ///     Registers a converter factory which converts between generic types <typeparamref name="TSource"/> and <typeparamref name="TTarget"/>.
         /// </summary>
         /// <typeparam name="TSource">Generic source type.</typeparam>
         /// <typeparam name="TTarget">Generic target type.</typeparam>
@@ -17,7 +23,7 @@ namespace TypeConverter
         void RegisterConverter<TSource, TTarget>(Func<IConvertable<TSource, TTarget>> converterFactory);
 
         /// <summary>
-        ///     Registers a converter (as a type) which converts between generic types TSource and TTarget.
+        ///     Registers a converter (as a type) which converts between generic types <typeparamref name="TSource"/> and <typeparamref name="TTarget"/>.
         /// </summary>
         /// <typeparam name="TSource">Generic source type.</typeparam>
         /// <typeparam name="TTarget">Generic target type.</typeparam>

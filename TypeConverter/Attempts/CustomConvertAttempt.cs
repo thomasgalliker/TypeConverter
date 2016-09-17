@@ -19,6 +19,23 @@ namespace TypeConverter.Attempts
             this.converters = new Dictionary<Tuple<Type, Type>, Func<IConvertable>>();
         }
 
+        internal void RegisterConverter(IConvertable converter)
+        {
+            lock (this.converters)
+            {
+                var convertables = converter.GetType().GetTypeInfo().ImplementedInterfaces.Where(i =>
+                    i.GetTypeInfo().IsGenericType &&
+                    i.GetGenericTypeDefinition() == typeof(IConvertable<,>));
+
+                foreach (var convertable in convertables)
+                {
+                    var sourceType = convertable.GenericTypeArguments[0];
+                    var targetType = convertable.GenericTypeArguments[1];
+                    this.converters.Add(new Tuple<Type, Type>(sourceType, targetType), () => converter);
+                }
+            }
+        }
+
         internal void RegisterConverter<TSource, TTarget>(Func<IConvertable<TSource, TTarget>> converterFactory)
         {
             lock (this.converters)
@@ -45,10 +62,10 @@ namespace TypeConverter.Attempts
                 return null;
             }
 
-            var matchingConverterInterface =
-                genericConverter.GetType()
-                    .GetTypeInfo()
-                    .ImplementedInterfaces.SingleOrDefault(i => i.GenericTypeArguments.Length == 2 && i.GenericTypeArguments[0] == sourceType && i.GenericTypeArguments[1] == targetType);
+            var matchingConverterInterface = genericConverter.GetType().GetTypeInfo().ImplementedInterfaces.SingleOrDefault(i => 
+                        i.GenericTypeArguments.Length == 2 &&
+                        i.GenericTypeArguments[0] == sourceType && 
+                        i.GenericTypeArguments[1] == targetType);
 
             // Call Convert method on the particular interface
             var convertMethodGeneric = matchingConverterInterface.GetTypeInfo().GetDeclaredMethod("Convert");

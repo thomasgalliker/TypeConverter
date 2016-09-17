@@ -86,6 +86,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Caching\CacheManagerTests.cs" />
+    <Compile Include="ConverterRegistryExtensionsTests.cs" />
     <Compile Include="Converters\StringToDateTimeOffsetConverterTests.cs" />
     <Compile Include="Converters\StringToDateTimeConverterTests.cs" />
     <Compile Include="Converters\StringToIntegerConverterTests.cs" />

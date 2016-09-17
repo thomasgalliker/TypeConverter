@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 
 using FluentAssertions;
-
-using TypeConverter.Caching;
 using TypeConverter.Converters;
 using TypeConverter.Exceptions;
 using TypeConverter.Tests.Stubs;
 using TypeConverter.Tests.Utils;
-using TypeConverter.Utils;
 
 using Xunit;
 using Xunit.Abstractions;
@@ -30,7 +27,7 @@ namespace TypeConverter.Tests
         public void ShouldThrowConversionNotSupportedExceptionWhenTryingToConvertWithoutValidRegistration()
         {
             // Arrange
-            const string InputString = "http://www.google.com/";
+            const string InputString = "http://www.superdev.ch/";
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             // Act
@@ -44,7 +41,7 @@ namespace TypeConverter.Tests
         public void ShouldThrowConversionNotSupportedExceptionWhenTryingToConvertGenericWithoutValidRegistration()
         {
             // Arrange
-            const string InputString = "http://www.google.com/";
+            const string InputString = "http://www.superdev.ch/";
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             // Act
@@ -58,7 +55,7 @@ namespace TypeConverter.Tests
         public void ShouldThrowConversionNotSupportedExceptionWhenWrongConversionWayIsConfigured()
         {
             // Arrange
-            const string InputString = "http://www.google.com/";
+            const string InputString = "http://www.superdev.ch/";
             IConverterRegistry converterRegistry = new ConverterRegistry();
             converterRegistry.RegisterConverter<Uri, string>(() => new StringToUriConverter());
 
@@ -70,10 +67,32 @@ namespace TypeConverter.Tests
         }
 
         [Fact]
+        public void ShouldRegisterConverterImplicitly()
+        {
+            // Arrange
+            const string InputString = "http://www.superdev.ch/";
+            var stringToUriConverter = new StringToUriConverter();
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+            converterRegistry.RegisterConverter(stringToUriConverter);
+
+            // Act
+            var convertedObject = converterRegistry.Convert<string, Uri>(InputString);
+            var outputString = converterRegistry.Convert<Uri, string>(convertedObject);
+
+            // Assert
+            convertedObject.Should().NotBeNull();
+            convertedObject.Should().BeOfType<Uri>();
+            convertedObject.As<Uri>().AbsoluteUri.Should().Be(InputString);
+
+            outputString.Should().NotBeNullOrEmpty();
+            outputString.Should().Be(InputString);
+        }
+
+        [Fact]
         public void ShouldConvertUsingConverterType()
         {
             // Arrange
-            const string InputString = "http://www.google.com/";
+            const string InputString = "http://www.superdev.ch/";
             Type converterType = typeof(StringToUriConverter);
             IConverterRegistry converterRegistry = new ConverterRegistry();
             converterRegistry.RegisterConverter<string, Uri>(converterType);
@@ -96,7 +115,7 @@ namespace TypeConverter.Tests
         public void ShouldConvertUsingGenericSourceTypeAndNongenericTargetType()
         {
             // Arrange
-            const string InputString = "http://www.google.com/";
+            const string InputString = "http://www.superdev.ch/";
             Type converterType = typeof(StringToUriConverter);
             IConverterRegistry converterRegistry = new ConverterRegistry();
             converterRegistry.RegisterConverter<string, Uri>(converterType);
@@ -119,7 +138,7 @@ namespace TypeConverter.Tests
         public void ShouldConvertUsingGenericTargetTypeAndObjectSourceType()
         {
             // Arrange
-            const string InputString = "http://www.google.com/";
+            const string InputString = "http://www.superdev.ch/";
             Type converterType = typeof(StringToUriConverter);
             IConverterRegistry converterRegistry = new ConverterRegistry();
             converterRegistry.RegisterConverter<string, Uri>(converterType);
@@ -142,7 +161,7 @@ namespace TypeConverter.Tests
         public void ShouldReturnDefaultValueWhenTryConvertToReferenceTypeFails()
         {
             // Arrange
-            const string InputString = "http://www.google.com/";
+            const string InputString = "http://www.superdev.ch/";
             IConverterRegistry converterRegistry = new ConverterRegistry();
 
             // Act

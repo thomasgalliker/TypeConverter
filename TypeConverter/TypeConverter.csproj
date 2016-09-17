@@ -55,6 +55,7 @@
     <Compile Include="Converters\StringToBoolConverter.cs" />
     <Compile Include="Converters\StringToDoubleConverter.cs" />
     <Compile Include="Converters\StringToUriConverter.cs" />
+    <Compile Include="Extensions\ConverterRegistryExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="IConverter.cs" />
     <Compile Include="IConverterCache.cs" />

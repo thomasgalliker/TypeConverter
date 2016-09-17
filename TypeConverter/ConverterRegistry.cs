@@ -21,17 +21,18 @@ namespace TypeConverter
         public ConverterRegistry()
         {
             this.customConversionAttempt = new CustomConvertAttempt();
-            this.conversionAttempts = new List<IConversionAttempt>
-            {
-                this.customConversionAttempt,
-                new CastAttempt(),
-                new ChangeTypeAttempt(),
-                new EnumParseAttempt(),
-                new StringParseAttempt()
-            };
+            this.conversionAttempts = new List<IConversionAttempt> { this.customConversionAttempt, new CastAttempt(), new ChangeTypeAttempt(), new EnumParseAttempt(), new StringParseAttempt() };
 
             this.cacheManager = new CacheManager();
             this.cacheManager.IsCacheEnabled = true;
+        }
+
+        /// <inheritdoc />
+        public void RegisterConverter(IConvertable converter)
+        {
+            Guard.ArgumentNotNull(converter, nameof(converter));
+
+            this.customConversionAttempt.RegisterConverter(converter);
         }
 
         /// <inheritdoc />
@@ -130,10 +131,10 @@ namespace TypeConverter
                 if (conversionResult != null && conversionResult.IsSuccessful)
                 {
                     this.cacheManager.UpdateCache(
-                        sourceType: sourceType,
-                        targetType: targetType, 
-                        isConvertable: conversionResult.IsSuccessful, 
-                        conversionAttempt: conversionAttempt);
+                      sourceType: sourceType,
+                      targetType: targetType,
+                      isConvertable: conversionResult.IsSuccessful,
+                      conversionAttempt: conversionAttempt);
 
                     return conversionResult.Value;
                 }
@@ -173,6 +174,7 @@ namespace TypeConverter
         }
 
         #region IConverterRegistry facade implementation
+
         /// <inheritdoc />
         void IConverterRegistry.Reset()
         {
@@ -224,6 +226,7 @@ namespace TypeConverter
         {
             this.cacheManager.Reset();
         }
+
         #endregion
     }
 }
