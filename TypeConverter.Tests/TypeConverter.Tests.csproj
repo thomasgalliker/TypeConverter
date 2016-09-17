@@ -89,6 +89,7 @@
     <Compile Include="ConverterRegistryExtensionsTests.cs" />
     <Compile Include="Converters\StringToDateTimeOffsetConverterTests.cs" />
     <Compile Include="Converters\StringToDateTimeConverterTests.cs" />
+    <Compile Include="Converters\StringToDecimalConverterTests.cs" />
     <Compile Include="Converters\StringToIntegerConverterTests.cs" />
     <Compile Include="Converters\StringToDoubleConverterTests.cs" />
     <Compile Include="Converters\StringToBoolConverterTests.cs" />

@@ -23,7 +23,7 @@
     </tags>
     <releaseNotes>
       1.0.28-pre
-      - Added new sample converters
+      - Added new converters
       - Added new RegisterConverter method in IConverterRegistry which allows to register non-generic IConvertable converters
 
       1.0.27
