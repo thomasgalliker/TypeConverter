@@ -9,7 +9,6 @@ using TypeConverter.Attempts;
 using TypeConverter.Caching;
 using TypeConverter.Exceptions;
 using TypeConverter.Extensions;
-using TypeConverter.Utils;
 
 namespace TypeConverter
 {
@@ -17,12 +16,14 @@ namespace TypeConverter
     {
         private readonly CacheManager cacheManager;
         private readonly IList<IConversionAttempt> conversionAttempts;
+        private readonly CustomConvertAttempt customConversionAttempt;
 
         public ConverterRegistry()
         {
+            this.customConversionAttempt = new CustomConvertAttempt();
             this.conversionAttempts = new List<IConversionAttempt>
             {
-                new CustomConvertAttempt(),
+                this.customConversionAttempt,
                 new CastAttempt(),
                 new ChangeTypeAttempt(),
                 new EnumParseAttempt(),
@@ -36,10 +37,9 @@ namespace TypeConverter
         /// <inheritdoc />
         public void RegisterConverter<TSource, TTarget>(Func<IConvertable<TSource, TTarget>> converterFactory)
         {
-            Guard.ArgumentNotNull(() => converterFactory);
+            Guard.ArgumentNotNull(converterFactory, nameof(converterFactory));
 
-            var customConvertStrategy = this.conversionAttempts.Single(a => a.GetType() == typeof(CustomConvertAttempt));
-            ((CustomConvertAttempt)customConvertStrategy).RegisterConverter(converterFactory);
+            this.customConversionAttempt.RegisterConverter(converterFactory);
         }
 
         /// <inheritdoc />
