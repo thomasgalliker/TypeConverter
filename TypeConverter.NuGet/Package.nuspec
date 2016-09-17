@@ -42,7 +42,7 @@
     <language>en-US</language>
     <dependencies>
       <group>
-        <dependency id="Guards" version="1.0.10"/>
+        <dependency id="Guards" version="[1.0.13,)" />
       </group>
     </dependencies>
   </metadata>
