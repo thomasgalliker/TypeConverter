@@ -25,10 +25,10 @@ using System.Runtime.CompilerServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
+// [assembly: AssemblyVersion("1.0.28")]
 
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.0.28")]
+[assembly: AssemblyFileVersion("1.0.28-pre4")]
 [assembly:
     InternalsVisibleTo(
         "TypeConverter.Tests, PublicKey=0024000004800000940000000602000000240000525341310004000001000100f1aadb1821f090"
