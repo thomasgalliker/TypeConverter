@@ -1,5 +1,4 @@
-﻿
-namespace TypeConverter
+﻿namespace TypeConverter
 {
     internal enum CastFlag
     {

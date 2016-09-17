@@ -1,4 +1,5 @@
 using System.Diagnostics;
+
 using TypeConverter.Attempts;
 
 namespace TypeConverter.Caching

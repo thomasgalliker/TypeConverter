@@ -7,8 +7,8 @@ using TypeConverter.Attempts;
 namespace TypeConverter.Caching
 {
     /// <summary>
-    /// CacheManager is an internal data structure which stores conversion strategies
-    /// for type-to-type mappings.
+    ///     CacheManager is an internal data structure which stores conversion strategies
+    ///     for type-to-type mappings.
     /// </summary>
     internal class CacheManager
     {
@@ -50,10 +50,7 @@ namespace TypeConverter.Caching
                 if (this.IsMaxCacheSizeEnabled && this.cache.Count >= this.MaxCacheSize)
                 {
                     // Take the top-weighted cache items according to ReadAccessCount
-                    this.cache = this.cache
-                        .OrderByDescending(x => x.Value.ReadAccessCount)
-                        .Take(newCacheSize)
-                        .ToDictionary(s => s.Key, s => s.Value);
+                    this.cache = this.cache.OrderByDescending(x => x.Value.ReadAccessCount).Take(newCacheSize).ToDictionary(s => s.Key, s => s.Value);
                 }
             }
         }
@@ -77,7 +74,7 @@ namespace TypeConverter.Caching
         }
 
         /// <summary>
-        /// Tries to get a CacheResult from given {sourceType, targetType} mapping.
+        ///     Tries to get a CacheResult from given {sourceType, targetType} mapping.
         /// </summary>
         /// <returns>A CacheResult which indicates if and how the given  {sourceType, targetType} mapping can be converted.</returns>
         internal CacheResult TryGetCachedValue(Type sourceType, Type targetType)

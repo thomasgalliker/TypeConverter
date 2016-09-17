@@ -2,8 +2,6 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-
-
 namespace TypeConverter.Utils
 {
     internal static class ReflectionHelper
