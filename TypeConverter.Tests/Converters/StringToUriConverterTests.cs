@@ -14,22 +14,32 @@ namespace TypeConverter.Tests.Converters
         public void ShouldConvertStringToUri()
         {
             // Arrange
-            const string InputString = "http://www.google.com/";
+            const string InputString = "http://www.superdev.ch/";
             IConverterRegistry converterRegistry = new ConverterRegistry();
             converterRegistry.RegisterConverter<string, Uri>(() => new StringToUriConverter());
             converterRegistry.RegisterConverter<Uri, string>(() => new StringToUriConverter());
 
             // Act
-            var convertedObject = converterRegistry.Convert<string, Uri>(InputString);
-            var outputString = converterRegistry.Convert<Uri, string>(convertedObject);
+            var outputUri = converterRegistry.Convert<string, Uri>(InputString);
 
             // Assert
-            convertedObject.Should().NotBeNull();
-            convertedObject.Should().BeOfType<Uri>();
-            convertedObject.As<Uri>().AbsoluteUri.Should().Be(InputString);
+            outputUri.Should().NotBeNull();
+            outputUri.AbsoluteUri.Should().Be(InputString);
+        }
 
-            outputString.Should().NotBeNullOrEmpty();
-            outputString.Should().Be(InputString);
+        [Fact]
+        public void ShouldConvertUriToString()
+        {
+            // Arrange
+            var inputUri = new Uri("http://www.superdev.ch/");
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+            converterRegistry.RegisterConverter<Uri, string>(() => new StringToUriConverter());
+
+            // Act
+            var outputString = converterRegistry.Convert<Uri, string>(inputUri);
+
+            // Assert
+            outputString.Should().Be(inputUri.AbsoluteUri);
         }
     }
 }
