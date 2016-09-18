@@ -25,7 +25,7 @@ namespace TypeConverter.Utils
                 return new CastResult((object)null, CastFlag.Undefined);
             }
 
-            Guard.ArgumentNotNull(() => targetType);
+            Guard.ArgumentNotNull(targetType, nameof(targetType));
 
             var sourceType = value.GetType();
             var sourceTypeInfo = value.GetType().GetTypeInfo();

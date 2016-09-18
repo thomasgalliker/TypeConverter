@@ -21,7 +21,14 @@ namespace TypeConverter
         public ConverterRegistry()
         {
             this.customConversionAttempt = new CustomConvertAttempt();
-            this.conversionAttempts = new List<IConversionAttempt> { this.customConversionAttempt, new CastAttempt(), new ChangeTypeAttempt(), new EnumParseAttempt(), new StringParseAttempt() };
+            this.conversionAttempts = new List<IConversionAttempt>
+            {
+                this.customConversionAttempt,
+                new CastAttempt(),
+                new ChangeTypeAttempt(),
+                new EnumParseAttempt(),
+                new StringParseAttempt()
+            };
 
             this.cacheManager = new CacheManager();
             this.cacheManager.IsCacheEnabled = true;
@@ -51,7 +58,7 @@ namespace TypeConverter
 
         private IConvertable<TSource, TTarget> CreateConverterInstance<TSource, TTarget>(Type converterType)
         {
-            Guard.ArgumentNotNull(() => converterType);
+            Guard.ArgumentNotNull(converterType, nameof(converterType));
 
             if (typeof(IConvertable<TSource, TTarget>).GetTypeInfo().IsAssignableFrom(converterType.GetTypeInfo()))
             {
@@ -64,7 +71,7 @@ namespace TypeConverter
         /// <inheritdoc />
         public TTarget Convert<TTarget>(object value)
         {
-            Guard.ArgumentNotNull(() => value);
+            Guard.ArgumentNotNull(value, nameof(value));
 
             return (TTarget)this.ConvertInternal(value.GetType(), typeof(TTarget), value);
         }
@@ -113,9 +120,15 @@ namespace TypeConverter
 
         private object ConvertInternal(Type sourceType, Type targetType, object value, object defaultReturnValue = null, bool throwIfConvertFails = true)
         {
-            Guard.ArgumentNotNull(() => value);
-            Guard.ArgumentNotNull(() => sourceType);
-            Guard.ArgumentNotNull(() => targetType);
+            Guard.ArgumentNotNull(value, nameof(value));
+            Guard.ArgumentNotNull(sourceType, nameof(sourceType));
+            Guard.ArgumentNotNull(targetType, nameof(targetType));
+
+            // If source type is the same as target type, no conversion/casting is necessary
+            if (sourceType == targetType)
+            {
+                return value;
+            }
 
             // Try to read conversion method from cache
             var cachedValue = this.TryGetCachedValue(value, sourceType, targetType);

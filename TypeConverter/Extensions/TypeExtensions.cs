@@ -56,8 +56,8 @@ namespace TypeConverter.Extensions
         /// </remarks>
         internal static bool IsSameOrParent(this Type parent, Type child)
         {
-            Guard.ArgumentNotNull(() => parent);
-            Guard.ArgumentNotNull(() => child);
+            Guard.ArgumentNotNull(parent, nameof(parent));
+            Guard.ArgumentNotNull(child, nameof(child));
 
             var parentTypeInfo = parent.GetTypeInfo();
             var childTypeInfo = child.GetTypeInfo();
@@ -117,7 +117,7 @@ namespace TypeConverter.Extensions
 
         internal static string GetFormattedName(this Type type)
         {
-            Guard.ArgumentNotNull(() => type);
+            Guard.ArgumentNotNull(type, nameof(type));
 
             var typeInfo = type.GetTypeInfo();
             if (!typeInfo.IsGenericType)
@@ -130,7 +130,7 @@ namespace TypeConverter.Extensions
 
         internal static string GetFormattedFullname(this Type type)
         {
-            Guard.ArgumentNotNull(() => type);
+            Guard.ArgumentNotNull(type, nameof(type));
 
             var typeInfo = type.GetTypeInfo();
             if (!typeInfo.IsGenericType)

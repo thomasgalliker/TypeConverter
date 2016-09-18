@@ -112,6 +112,21 @@ namespace TypeConverter.Tests
         }
 
         [Fact]
+        public void ShouldConvertIfSourceTypeEqualsTargetType()
+        {
+            // Arrange
+            var inputUri = new Uri("http://www.superdev.ch/");
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+
+            // Act
+            var outputUri = (Uri)converterRegistry.Convert(typeof(Uri), typeof(Uri), inputUri);
+
+            // Assert
+            outputUri.Should().NotBeNull();
+            outputUri.Should().Be(inputUri);
+        }
+
+        [Fact]
         public void ShouldConvertUsingGenericSourceTypeAndNongenericTargetType()
         {
             // Arrange

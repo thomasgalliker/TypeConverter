@@ -15,7 +15,7 @@ namespace TypeConverter
 
         public ConversionResult(Exception exception)
         {
-            Guard.ArgumentNotNull(() => exception);
+            Guard.ArgumentNotNull(exception, nameof(exception));
 
             this.Exception = exception;
         }
