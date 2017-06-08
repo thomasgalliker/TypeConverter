@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using Guards;
@@ -17,17 +18,20 @@ namespace TypeConverter
         private readonly CacheManager cacheManager;
         private readonly IList<IConversionAttempt> conversionAttempts;
         private readonly CustomConvertAttempt customConversionAttempt;
+        private readonly MapAttempt mapAttempt;
 
         public ConverterRegistry()
         {
             this.customConversionAttempt = new CustomConvertAttempt();
+            this.mapAttempt = new MapAttempt();
             this.conversionAttempts = new List<IConversionAttempt>
             {
                 this.customConversionAttempt,
+                this.mapAttempt,
                 new CastAttempt(),
                 new ChangeTypeAttempt(),
                 new EnumParseAttempt(),
-                new StringParseAttempt()
+                new StringParseAttempt(),
             };
 
             this.cacheManager = new CacheManager();
@@ -48,6 +52,14 @@ namespace TypeConverter
             Guard.ArgumentNotNull(converterFactory, nameof(converterFactory));
 
             this.customConversionAttempt.RegisterConverter(converterFactory);
+        }
+
+        public void RegisterMapping<TSource, TTarget>(Expression<Func<TTarget, object>> destinationMember, Expression<Func<TSource, object>> sourceMember)
+        {
+            Guard.ArgumentNotNull(destinationMember, nameof(destinationMember));
+            Guard.ArgumentNotNull(sourceMember, nameof(sourceMember));
+
+            this.mapAttempt.RegisterMapping(destinationMember, sourceMember);
         }
 
         /// <inheritdoc />
@@ -79,6 +91,11 @@ namespace TypeConverter
         /// <inheritdoc />
         public TTarget TryConvert<TTarget>(object value, TTarget defaultReturnValue = default(TTarget))
         {
+            if (value == null)
+            {
+                return defaultReturnValue;
+            }
+
             return (TTarget)this.ConvertInternal(value.GetType(), typeof(TTarget), value, defaultReturnValue, throwIfConvertFails: false);
         }
 
@@ -191,8 +208,8 @@ namespace TypeConverter
         /// <inheritdoc />
         void IConverterRegistry.Reset()
         {
-            var customConvertStrategy = this.conversionAttempts.Single(a => a.GetType() == typeof(CustomConvertAttempt));
-            ((CustomConvertAttempt)customConvertStrategy).Reset();
+            this.customConversionAttempt.Reset();
+            this.mapAttempt.Reset();
         }
 
         /// <inheritdoc />

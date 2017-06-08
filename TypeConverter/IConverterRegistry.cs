@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 
 namespace TypeConverter
 {
@@ -21,6 +22,8 @@ namespace TypeConverter
         /// <typeparam name="TTarget">Generic target type.</typeparam>
         /// <param name="converterFactory">The factory which creates the converter to convert between source and target type.</param>
         void RegisterConverter<TSource, TTarget>(Func<IConvertable<TSource, TTarget>> converterFactory);
+
+        void RegisterMapping<TSource, TTarget>(Expression<Func<TTarget, object>> destinationMember, Expression<Func<TSource, object>> sourceMember);
 
         /// <summary>
         ///     Registers a converter (as a type) which converts between generic types <typeparamref name="TSource"/> and <typeparamref name="TTarget"/>.

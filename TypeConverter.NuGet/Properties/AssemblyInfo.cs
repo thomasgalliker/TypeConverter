@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Thomas Galliker")]
 [assembly: AssemblyProduct("TypeConverter.NuGet")]
-[assembly: AssemblyCopyright("Copyright © 2016")]
+[assembly: AssemblyCopyright("Copyright © 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -36,4 +36,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.28")]
 
 [assembly: AssemblyVersion("1.0.28")]
-[assembly: AssemblyFileVersion("1.0.28-pre6")]
+[assembly: AssemblyFileVersion("1.0.28-pre9")]

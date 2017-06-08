@@ -339,7 +339,7 @@ namespace TypeConverter.Tests
             //const double DoubleValue = 0.0d;
             int IntegerValue = 999;
             IConverterRegistry converterRegistry = new ConverterRegistry();
-            
+
 
             // Act
             var convertedValue = converterRegistry.TryConvert((object)(int)999, (int)0);
@@ -407,9 +407,9 @@ namespace TypeConverter.Tests
 
                 // Act
                 var convertedObject = converterRegistry.TryConvert(
-                    sourceType: testCase.SourceType, 
-                    targetType: testCase.TargetType, 
-                    value: value, 
+                    sourceType: testCase.SourceType,
+                    targetType: testCase.TargetType,
+                    value: value,
                     defaultReturnValue: null);
 
                 // Assert
@@ -566,6 +566,26 @@ namespace TypeConverter.Tests
         }
         #endregion
 
+        #region Mapping Tests
+        [Fact]
+        public void ShouldConvertUsingRegisterMapping()
+        {
+            // Arrange
+            var model = new ModelA { Name = "Thomas", Age = 30 };
+
+            IConverterRegistry converterRegistry = new ConverterRegistry();
+            converterRegistry.RegisterMapping<ModelA, ViewModelA>(src => src.Name, dest => dest.Name);
+            converterRegistry.RegisterMapping<ModelA, ViewModelA>(src => src.Age, dest => dest.Age);
+
+            // Act
+            var viewModelA = converterRegistry.Convert<ModelA, ViewModelA>(model);
+
+            // Assert
+            viewModelA.Name.Should().Be("Thomas");
+            viewModelA.Age.Should().Be(30);
+        }
+        #endregion
+
         #region General Tests
         [Fact]
         public void ShouldResetRegistrations()
@@ -606,5 +626,19 @@ namespace TypeConverter.Tests
             }
         }
         #endregion
+    }
+
+    public class ViewModelA
+    {
+        public string Name { get; set; }
+
+        public int Age { get; set; }
+    }
+
+    public class ModelA
+    {
+        public string Name { get; set; }
+
+        public int Age { get; set; }
     }
 }
