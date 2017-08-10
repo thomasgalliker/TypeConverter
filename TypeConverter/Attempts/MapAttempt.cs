@@ -40,7 +40,7 @@ namespace TypeConverter.Attempts
                     return this.mapping[key];
                 }
 
-                return null;
+                return new List<Tuple<PropertyInfo, PropertyInfo>>();
             }
         }
 

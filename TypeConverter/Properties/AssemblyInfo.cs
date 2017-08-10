@@ -28,7 +28,7 @@ using System.Runtime.CompilerServices;
 // [assembly: AssemblyVersion("1.0.28")]
 
 [assembly: AssemblyVersion("1.0.28")]
-[assembly: AssemblyFileVersion("1.0.28-pre9")]
+[assembly: AssemblyFileVersion("1.0.28-pre91")]
 [assembly:
     InternalsVisibleTo(
         "TypeConverter.Tests, PublicKey=0024000004800000940000000602000000240000525341310004000001000100f1aadb1821f090"

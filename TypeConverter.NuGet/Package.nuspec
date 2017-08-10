@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>TypeConverter</id>
-    <version>1.0.28-pre9</version>
+    <version>1.0.28-pre91</version>
     <title>TypeConverter</title>
     <authors>Thomas Galliker</authors>
     <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
@@ -26,7 +26,7 @@
 - Added new converters
 - Added new RegisterConverter method in IConverterRegistry which allows to register non-generic IConvertable converters
 - Added new RegisterMapping method which allows to specify simple property-to-property mappings
-- Minor performance improvements
+- Minor performance improvements and bug fixes
 
 1.0.27
 - Complete refactoring of caching mechanism
