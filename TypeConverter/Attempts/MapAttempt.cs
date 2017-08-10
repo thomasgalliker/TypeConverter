@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using TypeConverter.Extensions;
 using TypeConverter.Utils;
 
 namespace TypeConverter.Attempts
@@ -18,14 +19,27 @@ namespace TypeConverter.Attempts
 
         public ConversionResult TryConvert(object value, Type sourceType, Type targetType)
         {
-            var target = Activator.CreateInstance(targetType);
-            var map = this.GetMappingForTypes(sourceType, targetType);
-            foreach (var m in map)
+            object target = null;
+            try
             {
-                var sourceValue = m.Item1.GetValue(value);
-                m.Item2.SetValue(target, sourceValue);
+                target = Activator.CreateInstance(targetType);
+                var map = this.GetMappingForTypes(sourceType, targetType);
+                if (map == null)
+                {
+                    return new ConversionResult(new Exception($"Mapping for sourceType {sourceType.GetFormattedName()} and targetType {targetType.GetFormattedName()} does not exist."));
+                }
+
+                foreach (var m in map)
+                {
+                    var sourceValue = m.Item1.GetValue(value);
+                    m.Item2.SetValue(target, sourceValue);
+                }
+          
             }
-        
+            catch (Exception ex)
+            {
+                return new ConversionResult(ex);
+            }
 
             return new ConversionResult(target);
         }
@@ -40,7 +54,7 @@ namespace TypeConverter.Attempts
                     return this.mapping[key];
                 }
 
-                return new List<Tuple<PropertyInfo, PropertyInfo>>();
+                return null;
             }
         }
 
